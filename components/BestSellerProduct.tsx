@@ -166,7 +166,7 @@ function Card({
                   setMsg("");
                 }}
                 style={s.available ? undefined : { backgroundImage: SLASH }}
-                className={`h-7 w-full rounded-md border text-[11px] font-medium transition-colors md:h-8 md:text-xs ${
+                className={`h-6 w-full p-0 rounded-md border text-[10px] font-medium transition-colors sm:h-7 sm:text-[11px] md:h-8 md:text-xs ${
                   !s.available
                     ? "cursor-not-allowed border-[#e3d9d9] bg-white text-[#b3a9ab]"
                     : size === s.label
@@ -189,12 +189,12 @@ function Card({
           </p>
         )}
 
-        {/* Add to Cart: white background, pink outline, #B20947 text, no hover effect */}
+        {/* Add to Cart: white background, pink outline, #B20947 text */}
         <button
           type="button"
           onClick={add}
           disabled={!product.inStock || busy}
-          className="mt-auto w-full rounded-[10px] border-[1.5px] border-[color:var(--bs-btn-border)] bg-[color:var(--bs-btn)] px-2 py-2.5 text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--bs-btn-text)] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] md:text-sm"
+          className="mt-auto w-full rounded-[10px] border-[1.5px] border-[color:var(--bs-btn-border)] bg-[color:var(--bs-btn)] px-1 py-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[color:var(--bs-btn-text)] sm:px-2 sm:py-2.5 sm:text-xs md:text-sm disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab]"
         >
           {product.inStock ? "Add to Cart" : "Out of Stock"}
         </button>
@@ -252,7 +252,7 @@ export default function BestSellers({
           <p className="text-center text-[#8a7e82]">Our best sellers will be back shortly.</p>
         ) : (
           /* Mobile: 2 cards per screen, swipe to the next 2 · Tablet: 2 cols · Desktop: 4 cols */
-          <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4 lg:gap-5 [&::-webkit-scrollbar]:hidden">
+          <ul className="flex touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4 lg:gap-5 [&::-webkit-scrollbar]:hidden">
             {items.map((p, i) => (
               <li
                 key={p.id}

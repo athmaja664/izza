@@ -65,7 +65,7 @@ export default function ShopByCategory({ categories = CATEGORIES }: Props) {
         {/* Heading */}
         <h2
           id="shop-by-category-heading"
-          className="mb-12 text-center text-3xl font-medium uppercase tracking-[0.14em] text-[#382B2B] md:mb-16 md:text-5xl"
+          className="mb-8 text-center text-2xl font-medium uppercase tracking-[0.12em] text-[#382B2B] sm:text-3xl md:mb-16 md:text-5xl md:tracking-[0.14em]"
         >
           Shop by Category
         </h2>
@@ -88,7 +88,7 @@ export default function ShopByCategory({ categories = CATEGORIES }: Props) {
           {/* Scrollable track: cards per view = --n, space between cards = --gap */}
           <div
             ref={trackRef}
-            className="flex min-w-0 flex-1 snap-x snap-mandatory gap-[var(--gap)] overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-2 [--gap:14px] [--n:2] [scrollbar-width:none] sm:[--gap:20px] sm:[--n:3] md:[--gap:24px] md:[--n:4] lg:[--gap:32px] lg:[--n:5] [&::-webkit-scrollbar]:hidden"
+            className="flex min-w-0 flex-1 touch-pan-x snap-x snap-mandatory gap-[var(--gap)] overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-2 [--gap:14px] [--n:2] [scrollbar-width:none] sm:[--gap:20px] sm:[--n:3] md:[--gap:24px] md:[--n:4] lg:[--gap:32px] lg:[--n:5] [&::-webkit-scrollbar]:hidden"
           >
             {categories.map((cat, i) => (
               <Link
@@ -117,10 +117,9 @@ export default function ShopByCategory({ categories = CATEGORIES }: Props) {
                 </div>
 
                 {/* Label below the image (fixed height keeps all cards aligned) */}
-                {/* Label below the image (fixed height keeps all cards aligned) */}
-<span className="mt-5 flex h-14 items-start justify-center px-1 text-center text-lg font-medium leading-tight text-[#382B2B] transition-colors duration-300 group-hover:text-[#EC4899] md:text-xl">
-  {cat.name}
-</span>
+                <span className="mt-3 flex h-12 items-start justify-center px-1 text-center text-base font-medium leading-tight text-[#382B2B] transition-colors duration-300 group-hover:text-[#EC4899] sm:mt-5 sm:h-14 sm:text-lg md:text-xl">
+                  {cat.name}
+                </span>
               </Link>
             ))}
           </div>

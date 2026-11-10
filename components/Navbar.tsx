@@ -62,13 +62,17 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [offerIndex, setOfferIndex] = useState(0);
+  const [prevOfferIndex, setPrevOfferIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Slide to the next offer every 2 seconds
+  // Slide to the next offer every 2 seconds without glitching on initial render
   useEffect(() => {
     const timer = setInterval(() => {
-      setOfferIndex((i) => (i + 1) % OFFERS.length);
+      setOfferIndex((curr) => {
+        setPrevOfferIndex(curr);
+        return (curr + 1) % OFFERS.length;
+      });
     }, OFFER_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
@@ -99,8 +103,6 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
   // Black text on the pink navbar
   const textColor = "text-black hover:text-white";
   const iconClass = `relative flex h-10 w-10 items-center justify-center transition-colors duration-200 ${textColor}`;
-
-  const prevOfferIndex = (offerIndex - 1 + OFFERS.length) % OFFERS.length;
 
   return (
     <>
@@ -147,19 +149,19 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
               </nav>
             </div>
 
-            {/* CENTER LOGO (cropped so it stays big in a short navbar) */}
+            {/* CENTER LOGO */}
             <Link
               href="/"
               aria-label="Izha Blooms home"
-              className="flex h-full items-center justify-center overflow-hidden"
+              className="flex items-center justify-center py-1 transition-transform duration-300 hover:scale-105"
             >
               <Image
-                src="/images/logooo.png"
+                src="/images/logo-nav.png"
                 alt="Izha Blooms"
-                width={240}
-                height={240}
+                width={200}
+                height={200}
                 priority
-                className="h-[84px] w-auto max-w-none object-contain md:h-[110px]"
+                className="h-11 w-auto max-w-[140px] object-contain sm:h-12 md:h-16 md:max-w-none"
               />
             </Link>
 
@@ -168,14 +170,14 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
               <button
                 aria-label="Search"
                 onClick={() => setSearchOpen(true)}
-                className={`${iconClass} hidden lg:flex`}
+                className={iconClass}
               >
                 <Search size={21} strokeWidth={1.5} />
               </button>
               <Link href="/account" aria-label="Account" className={`${iconClass} hidden lg:flex`}>
                 <User size={21} strokeWidth={1.5} />
               </Link>
-              <Link href="/wishlist" aria-label="Wishlist" className={`${iconClass} hidden lg:flex`}>
+              <Link href="/wishlist" aria-label="Wishlist" className={`${iconClass} hidden sm:flex`}>
                 <Heart size={21} strokeWidth={1.5} />
                 <Badge count={wishlistCount} />
               </Link>
@@ -195,9 +197,7 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
         >
           {OFFERS.map((offer, i) => {
             const isActive = i === offerIndex;
-            const isLeaving = i === prevOfferIndex;
-            // Active slides in from the right, the previous one slides out to the left.
-            // All other sentences wait on the right with no transition so they snap into place.
+            const isLeaving = prevOfferIndex !== null && i === prevOfferIndex;
             const position = isActive
               ? "translate-x-0 transition-transform ease-in-out"
               : isLeaving
@@ -209,7 +209,7 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
                 key={offer}
                 aria-hidden={!isActive}
                 style={isActive || isLeaving ? { transitionDuration: `${SLIDE_DURATION_MS}ms` } : undefined}
-                className={`absolute inset-0 flex items-center justify-center px-4 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-[#D9707F] md:text-xs ${position}`}
+                className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[#D9707F] sm:px-4 sm:text-[11px] sm:tracking-[0.2em] md:text-xs truncate ${position}`}
               >
                 {offer}
               </p>

@@ -62,7 +62,7 @@ export default function HeroCarousel() {
         Height = full screen minus the header (navbar h-16 / h-20 + offers bar h-8 / h-10 = 96px / 120px),
         so the hero starts right below the offers bar.
       */
-      className="relative isolate w-full overflow-hidden bg-[#8F3057] h-[calc(100vh-96px)] min-h-[480px] md:h-[calc(100vh-120px)] md:min-h-[560px]"
+      className="relative isolate w-full overflow-hidden bg-[#8F3057] h-[calc(100dvh-96px)] sm:h-[calc(100vh-96px)] min-h-[440px] md:h-[calc(100dvh-120px)] md:sm:h-[calc(100vh-120px)] md:min-h-[560px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
@@ -102,28 +102,28 @@ export default function HeroCarousel() {
           />
 
           {/* Centred text */}
-          <div className="relative flex h-full items-center justify-center px-4 text-center md:px-[3.3vw]">
+          <div className="relative flex h-full items-center justify-center px-4 text-center sm:px-6 md:px-[3.3vw]">
             <div
               className={`mx-auto max-w-[680px] transition-all duration-1000 ease-out ${
                 i === current ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
               }`}
             >
               <p
-                className="text-sm font-bold uppercase tracking-[0.18em] text-[#FFF0C5]"
+                className="text-xs font-bold uppercase tracking-[0.16em] text-[#FFF0C5] sm:text-sm sm:tracking-[0.18em]"
                 style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
               >
                 {slide.eyebrow}
               </p>
 
               <h1
-                className="mt-3 text-[32px] font-bold leading-tight tracking-tight text-white md:text-[42px] lg:text-[54px]"
+                className="mt-2 text-2xl font-bold leading-tight tracking-tight text-white sm:mt-3 sm:text-3xl md:text-[42px] lg:text-[54px]"
                 style={{ textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}
               >
                 {slide.title}
               </h1>
 
               <p
-                className="mt-3 text-base font-normal leading-relaxed text-white md:text-[17px] lg:mt-4 lg:text-[19px]"
+                className="mt-2 text-sm font-normal leading-relaxed text-white sm:mt-3 sm:text-base md:text-[17px] lg:mt-4 lg:text-[19px]"
                 style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
               >
                 {slide.text}
@@ -131,7 +131,7 @@ export default function HeroCarousel() {
 
               <Link
                 href={slide.href}
-                className="mt-8 inline-flex h-12 items-center justify-center rounded-md border-2 border-white bg-white px-9 text-[15px] font-semibold text-[#8F3057] transition-colors duration-300 hover:bg-transparent hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="mt-6 inline-flex h-11 items-center justify-center rounded-md border-2 border-white bg-white px-7 text-sm font-semibold text-[#8F3057] transition-colors duration-300 hover:bg-transparent hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:mt-8 sm:h-12 sm:px-9 sm:text-[15px]"
               >
                 {slide.cta}
               </Link>

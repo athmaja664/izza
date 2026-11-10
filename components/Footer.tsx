@@ -118,10 +118,10 @@ export default function Footer() {
     <footer className="bg-[#382B2B] text-[#F3E7D3]" aria-label="Site footer">
       {/* Trust strip */}
       <div className="border-b border-white/10">
-        <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-6 px-4 py-8 md:px-8 lg:grid-cols-4 lg:py-10">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-4 px-4 py-6 sm:grid-cols-2 md:gap-6 md:px-8 lg:grid-cols-4 lg:py-10">
           {TRUST.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-start gap-3 lg:items-center">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#E99A9F]/50 text-[#E99A9F]">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#E99A9F]/50 text-[#E99A9F] sm:size-11">
                 <Icon size={20} strokeWidth={1.5} />
               </span>
               <div>
@@ -136,17 +136,17 @@ export default function Footer() {
       </div>
 
       {/* Main columns */}
-      <div className="mx-auto max-w-[1600px] px-4 py-12 md:px-8 lg:py-16">
+      <div className="mx-auto max-w-[1600px] px-4 py-10 md:px-8 lg:py-16">
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] lg:gap-x-10">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" aria-label={`${BRAND} home`} className="inline-block">
               <Image
-                src="/images/logooo.png"
+                src="/images/logo-nav.png"
                 alt={BRAND}
-                width={240}
-                height={240}
-                className="h-24 w-auto object-contain"
+                width={200}
+                height={200}
+                className="h-16 w-auto object-contain brightness-0 invert opacity-90 transition-opacity hover:opacity-100 sm:h-20 md:h-24"
               />
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#F3E7D3]/75">{TAGLINE}</p>

@@ -33,7 +33,7 @@ export default function PreLoader({ duration = 3500 }: PreLoaderProps) {
       <img
         src="/images/loogo1.png"
         alt="Izha Blooms"
-        className="logo-anim h-72 w-72 object-contain sm:h-96 sm:w-96"
+        className="logo-anim h-60 w-60 max-w-[85vw] object-contain sm:h-80 sm:w-80 md:h-96 md:w-96"
         style={{
           WebkitMaskImage:
             "radial-gradient(circle, black 55%, transparent 72%)",
