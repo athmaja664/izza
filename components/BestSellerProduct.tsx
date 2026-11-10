@@ -265,7 +265,7 @@ export default function BestSellers({
             ))}
 
             {/* Mobile-only end slide */}
-            <li
+            {/* <li
               className={`flex w-[calc((100%-0.75rem)/2)] shrink-0 sm:hidden ${
                 items.length % 2 === 0 ? "snap-start" : "[scroll-snap-align:none]"
               }`}
@@ -279,7 +279,7 @@ export default function BestSellers({
                 </span>
                 View More
               </Link>
-            </li>
+            </li> */}
           </ul>
         )}
 
