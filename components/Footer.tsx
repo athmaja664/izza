@@ -112,7 +112,7 @@ function LinkColumn({
 }
 
 export default function Footer() {
-  const year = new Date().getFullYear();
+  const year = 2026;
 
   return (
     <footer className="bg-[#382B2B] text-[#F3E7D3]" aria-label="Site footer">
