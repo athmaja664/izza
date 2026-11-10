@@ -150,20 +150,21 @@ export default function Navbar({ cartCount = 0, wishlistCount = 0 }: NavbarProps
             </div>
 
             {/* CENTER LOGO */}
-            <Link
-              href="/"
-              aria-label="Izha Blooms home"
-              className="flex items-center justify-center py-1 transition-transform duration-300 hover:scale-105"
-            >
-              <Image
-                src="/images/logo-nav.png"
-                alt="Izha Blooms"
-                width={200}
-                height={200}
-                priority
-                className="h-11 w-auto max-w-[140px] object-contain sm:h-12 md:h-16 md:max-w-none"
-              />
-            </Link>
+            {/* CENTER LOGO (bigger logo, navbar height stays the same) */}
+<Link
+  href="/"
+  aria-label="Izha Blooms home"
+  className="flex h-full items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105"
+>
+  <Image
+    src="/images/logooo.png"
+    alt="Izha Blooms"
+    width={240}
+    height={240}
+    priority
+    className="h-[100px] w-auto max-w-none object-contain sm:h-[108px] md:h-[124px]"
+  />
+</Link>
 
             {/* RIGHT ICONS */}
             <div className="flex items-center justify-end gap-0.5 md:gap-1">
