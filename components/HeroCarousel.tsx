@@ -23,6 +23,7 @@ const BUTTON = {
   imagePosition "right center" keeps the right side (the lady) and cuts
   the extra plain area from the LEFT. Use "center" to cut both sides equally.
   textColor / accentColor: change these per slide so the text is readable.
+  The <br className="sm:hidden" /> in titles only breaks the line on mobile.
 */
 const SLIDES = [
   {
@@ -30,7 +31,12 @@ const SLIDES = [
     imageAlt: "Izha Blooms new festive collection",
     imagePosition: "right center",
     eyebrow: "New Festive Collection",
-    title: "Where Every Thread Blooms",
+    title: (
+      <>
+        Where Every <br className="sm:hidden" />
+        Thread Blooms
+      </>
+    ),
     text: "Handcrafted embroidered kurtas in soft rose shades, made for your most beautiful moments.",
     cta: "Shop Now",
     href: "/shop",
@@ -42,7 +48,12 @@ const SLIDES = [
     imageAlt: "Embroidered kurtas in soft rose shades",
     imagePosition: "right center",
     eyebrow: "Season of Elegance",
-    title: "Embroidered Kurtas, Made to Be Loved",
+    title: (
+      <>
+        Embroidered Kurtas, <br className="sm:hidden" />
+        Made to Be Loved
+      </>
+    ),
     text: "Soft rose shades and fine handwork for every celebration this season.",
     cta: "Shop Now",
     href: "/shop",
