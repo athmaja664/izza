@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 import { Cormorant_Garamond } from "next/font/google";
 import { ArrowRight, Heart } from "lucide-react";
@@ -20,19 +21,18 @@ const COLORS = {
   buttonBorder: "#E99A9F", // Add to Cart pink outline
   buttonText: "#B20947",   // Add to Cart text
   label: "#B20947",        // "OUR CUSTOMER FAVOURITES" text
-  accent: "#E99A9F",       // heading line, heart, selected size, arrow circle
+  accent: "#E99A9F",       // heading line, heart, arrow circle
   cardBorder: "#E8B8C5",   // outer pink card border
   cardBg: "#FCF8F3",       // card background
   imageBg: "#FFF5F7",      // behind product image / View More card
   ink: "#332B2B",          // main text
   badgeBg: "#F9E3E9",      // "% OFF" badge background
   badgeText: "#B5607A",    // "% OFF" badge text
-  slash: "#8f8588",        // "/" line on sold-out sizes
 };
 
-/* Every card always shows these sizes. A size missing from product.sizes
-   (or marked inStock:false) is shown crossed out and cannot be selected. */
-const ALL_SIZES = ["XS", "S", "M", "L", "XL"];
+/* true  = Add to Cart opens the product details page, where the size is chosen
+   false = Add to Cart calls onAddToCart(product, null) straight from the card */
+const ADD_GOES_TO_DETAILS = true;
 
 /* Shape this component expects. Map your real DB/API product to it. */
 export type BestSellerProduct = {
@@ -43,7 +43,7 @@ export type BestSellerProduct = {
   price: number;
   compareAtPrice?: number | null;
   inStock: boolean;
-  /* If omitted, all five sizes are treated as available */
+  /* Sizes are no longer shown on the card. Kept so existing data still fits. */
   sizes?: { label: string; inStock: boolean }[];
   isWishlisted?: boolean;
 };
@@ -56,30 +56,20 @@ type Props = {
   onToggleWishlist?: (id: BestSellerProduct["id"]) => Promise<boolean | void> | boolean | void;
 };
 
-/* Diagonal "/" line drawn across a sold-out size box */
-const SLASH = `linear-gradient(to top right, transparent calc(50% - 0.6px), ${COLORS.slash} calc(50% - 0.6px), ${COLORS.slash} calc(50% + 0.6px), transparent calc(50% + 0.6px))`;
-
 function Card({
   product,
   currency,
   onAddToCart,
   onToggleWishlist,
 }: { product: BestSellerProduct; currency: string } & Pick<Props, "onAddToCart" | "onToggleWishlist">) {
+  const router = useRouter();
   const [wished, setWished] = useState(!!product.isWishlisted);
-  const [size, setSize] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
   const fmt = (n: number) => `${currency}${n.toLocaleString("en-IN")}`;
   const hasDiscount = !!product.compareAtPrice && product.compareAtPrice > product.price;
   const percent = hasDiscount ? Math.round((1 - product.price / product.compareAtPrice!) * 100) : 0;
-
-  const sizeList = ALL_SIZES.map((label) => {
-    const found = product.sizes?.find((s) => s.label.toUpperCase() === label);
-    const available = product.inStock && (product.sizes ? !!found?.inStock : true);
-    return { label, available };
-  });
-  const needsSize = sizeList.some((s) => s.available);
 
   const toggleWish = async () => {
     const next = !wished;
@@ -95,10 +85,16 @@ function Card({
 
   const add = async () => {
     if (busy) return;
-    if (needsSize && !size) return setMsg("Please select a size.");
+
+    // The size is chosen on the details page
+    if (ADD_GOES_TO_DETAILS) {
+      router.push(product.href);
+      return;
+    }
+
     setBusy(true);
     try {
-      await onAddToCart?.(product, size);
+      await onAddToCart?.(product, null);
       setMsg("Added to cart ✓");
     } catch {
       setMsg("Couldn’t add to cart. Please try again.");
@@ -150,35 +146,6 @@ function Card({
             </>
           )}
         </div>
-
-        {/* XS S M L XL – sold-out sizes get a "/" line */}
-        <ul className="grid grid-cols-5 gap-1" aria-label="Sizes">
-          {sizeList.map((s) => (
-            <li key={s.label}>
-              <button
-                type="button"
-                disabled={!s.available}
-                aria-pressed={size === s.label}
-                aria-label={s.available ? `Size ${s.label}` : `Size ${s.label} – not available`}
-                title={s.available ? s.label : `${s.label} – not available`}
-                onClick={() => {
-                  setSize(s.label);
-                  setMsg("");
-                }}
-                style={s.available ? undefined : { backgroundImage: SLASH }}
-                className={`h-6 w-full p-0 rounded-md border text-[10px] font-medium transition-colors sm:h-7 sm:text-[11px] md:h-8 md:text-xs ${
-                  !s.available
-                    ? "cursor-not-allowed border-[#e3d9d9] bg-white text-[#b3a9ab]"
-                    : size === s.label
-                      ? "border-[color:var(--bs-accent)] bg-[color:var(--bs-accent)] text-white"
-                      : "border-[color:var(--bs-border)] bg-white text-[color:var(--bs-ink)] hover:border-[color:var(--bs-accent)]"
-                }`}
-              >
-                {s.label}
-              </button>
-            </li>
-          ))}
-        </ul>
 
         <p className={`text-xs ${product.inStock ? "text-[#5f7a62]" : "font-semibold tracking-wider text-[#b04a4a]"}`}>
           {product.inStock ? "In stock" : "OUT OF STOCK"}
@@ -284,12 +251,12 @@ export default function BestSellers({
         )}
 
         <div className="mt-6 text-center md:mt-8">
-        <Link
-  href={viewAllHref}
-  className="inline-block rounded-full border border-[#B0406A] bg-[#B0406A] px-8 py-3 text-xs uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:border-[#8F3057] hover:bg-[#8F3057] md:text-sm"
->
-  View All Best Sellers
-</Link>
+          <Link
+            href={viewAllHref}
+            className="inline-block rounded-full border border-[#B0406A] bg-[#B0406A] px-8 py-3 text-xs uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:border-[#8F3057] hover:bg-[#8F3057] md:text-sm"
+          >
+            View All Best Sellers
+          </Link>
         </div>
       </div>
     </section>

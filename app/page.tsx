@@ -5,66 +5,26 @@ import InstagramGallery from "@/components/InstagramGallery";
 import NewArrivalBanner from "@/components/NewArrivalBanner";
 import AboutSection from "@/components/AboutSection";
 import ReviewsSection from "@/components/ReviewsSection";
+import { PRODUCTS } from "@/lib/products";
 
-/* ==================================================================
-   IMAGE URLS – paste your image link/path for each product here.
-   • Local file:  "/images/yourfile.jpg"   (file must be in public/images)
-   • Web link:    "https://..."            (its domain must be added to
-                                            images.remotePatterns in next.config.ts)
-================================================================== */
-const IMG_1 = "/images/catetop.jpg";
-const IMG_2 = "/images/co-ords-set.jpg";
-const IMG_3 = "/images/causal-waer.jpg";
-const IMG_4 = "/images/cateogry1.jpg";
+const BEST_SELLER_IDS = ["p2", "p3", "p1", "p20"];
 
-/* TEMPORARY test data – replace with real best-sellers from your database */
-const products: BestSellerProduct[] = [
-  {
-    id: 1,
-    name: "Pastel Embroidered Kurta",
-    image: IMG_1,
-    href: "/shop",
-    price: 1499,
-    compareAtPrice: 1999,
+const products: BestSellerProduct[] = BEST_SELLER_IDS.map((id) => {
+  const item = PRODUCTS.find((p) => p.id === id) ?? PRODUCTS[0];
+  return {
+    id: item.id,
+    name: item.name,
+    image: item.image,
+    href: `/product/${item.id}`,
+    price: item.price,
+    compareAtPrice: item.mrp,
     inStock: true,
-    sizes: [
-      { label: "S", inStock: true },
-      { label: "M", inStock: true },
-      { label: "L", inStock: false },
-    ],
-  },
-  {
-    id: 2,
-    name: "Floral Cotton Set",
-    image: IMG_2,
-    href: "/shop",
-    price: 1299,
-    inStock: true,
-    sizes: [
-      { label: "XS", inStock: true },
-      { label: "M", inStock: true },
-      { label: "L", inStock: true },
-      { label: "XL", inStock: true },
-    ],
-  },
-  {
-    id: 3,
-    name: "Festive Ethnic Suit",
-    image: IMG_3,
-    href: "/shop",
-    price: 999,
-    compareAtPrice: 1299,
-    inStock: true, // no "sizes" = all five sizes available
-  },
-  {
-    id: 4,
-    name: "Soft Blush Anarkali",
-    image: IMG_4,
-    href: "/shop",
-    price: 1799,
-    inStock: false, // OUT OF STOCK, all sizes crossed out
-  },
-];
+    sizes: item.sizes.map((label) => ({
+      label,
+      inStock: !(item.soldOutSizes ?? []).includes(label),
+    })),
+  };
+});
 
 export default function Home() {
   return (

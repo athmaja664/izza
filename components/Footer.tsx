@@ -29,11 +29,12 @@ const TRUST = [
 ];
 
 const SHOP_LINKS = [
-  { label: "New Arrivals", href: "/collections/new-arrivals" },
-  { label: "Embroidered", href: "/collections/embroidered" },
-  { label: "Festive", href: "/collections/festive" },
-  { label: "Dresses", href: "/shop/dresses" },
-  { label: "Accessories", href: "/shop/accessories" },
+  { label: "New Arrivals", href: "/new-arrivals" },
+  { label: "Dresses", href: "/collections/dresses" },
+  { label: "Kurtas", href: "/collections/kurtas" },
+  { label: "Kurta Sets", href: "/collections/kurta-sets" },
+  { label: "Tops", href: "/collections/tops" },
+  { label: "Maternity Wear", href: "/collections/maternity-wear" },
   { label: "All Products", href: "/shop" },
 ];
 
@@ -41,7 +42,7 @@ const CARE_LINKS = [
   { label: "My Account", href: "/account" },
   { label: "Order History", href: "/account" },
   { label: "Wishlist", href: "/wishlist" },
-  { label: "Cart", href: "/cart" },
+  { label: "Cart", href: "/addtocart" },
   { label: "Track Your Order", href: "/track-order" },
   { label: "Contact Us", href: "/contact" },
 ];

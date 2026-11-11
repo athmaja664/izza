@@ -3,7 +3,7 @@ import Link from "next/link";
 
 /* ---- Easy settings ---- */
 const BANNER_IMAGE = "/images/newarrivalhome.png"; // image in public/images/
-const BANNER_LINK = "/collections/new-arrivals"; // page the button opens
+const BANNER_LINK = "/new-arrivals"; // page the button opens
 const ACCENT = "#ad0e48"; //b20947 dark pink for the caption
 
 /* Which part of the image stays visible on mobile (the image is cropped to 4:3 there).
