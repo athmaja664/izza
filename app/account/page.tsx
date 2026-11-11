@@ -140,7 +140,7 @@ export default function AccountPage() {
    ===================================================================== */
 
 /** Optional portrait photo for the left panel, e.g. "/images/account-banner.jpg" */
-const AUTH_IMAGE = "/images/inst4.jpg";
+const AUTH_IMAGE: string = "/images/inst4.jpg";
 
 const isEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v);
 const isPhone = (v: string) => /^[6-9]\d{9}$/.test(v);
