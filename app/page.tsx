@@ -3,6 +3,8 @@ import BestSellers, { type BestSellerProduct } from "@/components/BestSellerProd
 import ShopByCategory from "@/components/home/ShopByCategory";
 import InstagramGallery from "@/components/InstagramGallery";
 import NewArrivalBanner from "@/components/NewArrivalBanner";
+import AboutSection from "@/components/AboutSection";
+import ReviewsSection from "@/components/ReviewsSection";
 
 /* ==================================================================
    IMAGE URLS – paste your image link/path for each product here.
@@ -69,9 +71,11 @@ export default function Home() {
     <main>
       <HeroCarousel />
       <ShopByCategory />
-      <BestSellers products={products} viewAllHref="/shop" />
       <NewArrivalBanner />
+      <BestSellers products={products} viewAllHref="/shop" />
+      <AboutSection/>
       <InstagramGallery />
+      <ReviewsSection/>
     </main>
   );
 }

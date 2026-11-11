@@ -7,24 +7,60 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const AUTOPLAY_MS = 5000;
 
-/* Pink shade over the image. Lower numbers = lighter, higher = stronger.
-   Top / middle / bottom strength (0 to 1). */
-const OVERLAY_TOP = 0.35;
-const OVERLAY_MIDDLE = 0.2;
-const OVERLAY_BOTTOM = 0.4;
+/* Beige background behind the carousel */
+const SECTION_BG = "#F5EBDD";
 
+/* Button colours – same as the Add to Cart button in BestSellers */
+const BUTTON = {
+  bg: "#FFFFFF", // button background (white)
+  border: "#E99A9F", // pink outline
+  text: "#B20947", // button text
+  hoverBg: "#FFF5F7", // light pink on hover
+};
+
+/*
+  Each slide = one banner image + text shown on the LEFT side of it.
+  imagePosition "right center" keeps the right side (the lady) and cuts
+  the extra plain area from the LEFT. Use "center" to cut both sides equally.
+  textColor / accentColor: change these per slide so the text is readable.
+*/
 const SLIDES = [
   {
-    image: "/images/herosection1.png",
-    imageAlt: "Izha Blooms embroidered kurtas in soft rose shades",
-    imagePosition: "center", // object-position, e.g. "center", "top", "left center"
+    image: "/images/hero5.png",
+    imageAlt: "Izha Blooms new festive collection",
+    imagePosition: "right center",
     eyebrow: "New Festive Collection",
     title: "Where Every Thread Blooms",
     text: "Handcrafted embroidered kurtas in soft rose shades, made for your most beautiful moments.",
-    cta: "Shop the Collection",
+    cta: "Shop Now",
     href: "/shop",
+    textColor: "#3A1426", // main text colour
+    accentColor: "#8F3057", // eyebrow colour
   },
-  // To add more slides, copy the object above and change the image, title, text and link.
+  {
+    image: "/images/hero4.png",
+    imageAlt: "Embroidered kurtas in soft rose shades",
+    imagePosition: "right center",
+    eyebrow: "Season of Elegance",
+    title: "Embroidered Kurtas, Made to Be Loved",
+    text: "Soft rose shades and fine handwork for every celebration this season.",
+    cta: "Shop Now",
+    href: "/shop",
+    textColor: "#3A1426",
+    accentColor: "#8F3057",
+  },
+  // {
+  //   image: "/images/hero3.png",
+  //   imageAlt: "Handcrafted ethnic wear sale",
+  //   imagePosition: "right center",
+  //   eyebrow: "Limited Time Offer",
+  //   title: "Handcrafted Ethnic Wear Sale",
+  //   text: "Up to 50% off on selected styles.",
+  //   cta: "Shop Now",
+  //   href: "/shop",
+  //   textColor: "#3A1426",
+  //   accentColor: "#8F3057",
+  // },
 ];
 
 export default function HeroCarousel() {
@@ -33,24 +69,23 @@ export default function HeroCarousel() {
   const touchStartX = useRef<number | null>(null);
 
   const total = SLIDES.length;
-  const multiple = total > 1;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
   const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), [total]);
 
-  // Autoplay only when there is more than one slide
+  // Autoplay
   useEffect(() => {
-    if (!multiple || paused) return;
+    if (paused) return;
     const timer = setTimeout(next, AUTOPLAY_MS);
     return () => clearTimeout(timer);
-  }, [current, paused, multiple, next]);
+  }, [current, paused, next]);
 
   // Swipe support for mobile
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (!multiple || touchStartX.current === null) return;
+    if (touchStartX.current === null) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) (diff > 0 ? next : prev)();
     touchStartX.current = null;
@@ -58,120 +93,142 @@ export default function HeroCarousel() {
 
   return (
     <section
-      /*
-        Height = full screen minus the header (navbar h-16 / h-20 + offers bar h-8 / h-10 = 96px / 120px),
-        so the hero starts right below the offers bar.
-      */
-      className="relative isolate w-full overflow-hidden bg-[#8F3057] h-[calc(100dvh-96px)] sm:h-[calc(100vh-96px)] min-h-[440px] md:h-[calc(100dvh-120px)] md:sm:h-[calc(100vh-120px)] md:min-h-[560px]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      className="w-full py-3 sm:py-6 md:py-8"
+      style={{ backgroundColor: SECTION_BG }}
       aria-roledescription="carousel"
       aria-label="Featured collections"
     >
-      {SLIDES.map((slide, i) => (
+      <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 md:px-8">
+        {/* Banner height (width : height). Smaller first number = taller banner.
+            mobile 1.6:1 · tablet 2.4:1 · small laptop 2.6:1 · large laptop 2.8:1 */}
         <div
-          key={slide.title}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            i === current ? "z-10 opacity-100" : "z-0 opacity-0"
-          }`}
-          aria-hidden={i !== current}
+          className="group relative aspect-[1.6/1] w-full overflow-hidden rounded-xl shadow-md sm:aspect-[2.4/1] sm:rounded-2xl md:aspect-[2.6/1] lg:aspect-[2.8/1]"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          {/* Background image (sharp, no blur) */}
-          <Image
-            src={slide.image}
-            alt={slide.imageAlt}
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            quality={85}
-            className="object-cover"
-            style={{ objectPosition: slide.imagePosition }}
-          />
-
-          {/* Light pink shade over the image */}
+          {/* Sliding track */}
           <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to bottom,
-                rgba(143, 48, 87, ${OVERLAY_TOP}),
-                rgba(176, 64, 106, ${OVERLAY_MIDDLE}),
-                rgba(143, 48, 87, ${OVERLAY_BOTTOM}))`,
-            }}
-          />
-
-          {/* Centred text */}
-          <div className="relative flex h-full items-center justify-center px-4 text-center sm:px-6 md:px-[3.3vw]">
-            <div
-              className={`mx-auto max-w-[680px] transition-all duration-1000 ease-out ${
-                i === current ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-              }`}
-            >
-              <p
-                className="text-xs font-bold uppercase tracking-[0.16em] text-[#FFF0C5] sm:text-sm sm:tracking-[0.18em]"
-                style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
+            className="flex h-full w-full transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${current * 100}%)` }}
+          >
+            {SLIDES.map((slide, i) => (
+              <div
+                key={slide.image}
+                className="relative h-full w-full shrink-0"
+                aria-hidden={i !== current}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${total}`}
               >
-                {slide.eyebrow}
-              </p>
+                {/* Image (clickable) */}
+                <Link
+                  href={slide.href}
+                  tabIndex={-1}
+                  aria-label={slide.imageAlt}
+                  className="absolute inset-0 block"
+                >
+                  <Image
+                    src={slide.image}
+                    alt={slide.imageAlt}
+                    fill
+                    priority={i === 0}
+                    sizes="(max-width: 1600px) 100vw, 1600px"
+                    quality={85}
+                    className="object-cover"
+                    style={{ objectPosition: slide.imagePosition }}
+                  />
+                </Link>
 
-              <h1
-                className="mt-2 text-2xl font-bold leading-tight tracking-tight text-white sm:mt-3 sm:text-3xl md:text-[42px] lg:text-[54px]"
-                style={{ textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}
-              >
-                {slide.title}
-              </h1>
+                {/* Text on the left side of the image.
+                    pointer-events-none so the image link still works;
+                    the button turns pointer events back on. */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex w-[55%] items-center pl-8 pr-1 sm:w-[52%] sm:pl-12 md:w-[46%] md:pl-16 lg:w-[42%] lg:pl-20">
+                  <div
+                    className={`transition-all duration-700 ease-out ${
+                      i === current ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                    }`}
+                  >
+                    {/* Eyebrow hidden on phones to keep the banner clean */}
+                    <p
+                      className="hidden text-xs font-bold uppercase tracking-[0.16em] sm:block md:text-sm"
+                      style={{ color: slide.accentColor }}
+                    >
+                      {slide.eyebrow}
+                    </p>
 
-              <p
-                className="mt-2 text-sm font-normal leading-relaxed text-white sm:mt-3 sm:text-base md:text-[17px] lg:mt-4 lg:text-[19px]"
-                style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
-              >
-                {slide.text}
-              </p>
+                    <h2
+                      className="line-clamp-3 text-base font-bold leading-tight tracking-tight sm:mt-1 sm:line-clamp-none sm:text-xl md:mt-2 md:text-3xl lg:text-[40px]"
+                      style={{ color: slide.textColor }}
+                    >
+                      {slide.title}
+                    </h2>
 
-              <Link
-                href={slide.href}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-md border-2 border-white bg-white px-7 text-sm font-semibold text-[#8F3057] transition-colors duration-300 hover:bg-transparent hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:mt-8 sm:h-12 sm:px-9 sm:text-[15px]"
-              >
-                {slide.cta}
-              </Link>
-            </div>
+                    {/* Paragraph hidden on phones */}
+                    <p
+                      className="mt-2 hidden text-sm leading-relaxed sm:block md:text-base lg:mt-3 lg:text-[17px]"
+                      style={{ color: slide.textColor }}
+                    >
+                      {slide.text}
+                    </p>
+
+                    {/* Shop Now button – same style as Add to Cart */}
+                    <Link
+                      href={slide.href}
+                      tabIndex={i === current ? 0 : -1}
+                      className="pointer-events-auto mt-2.5 inline-flex items-center justify-center rounded-md border-[1.5px] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] transition-colors duration-200 hover:!bg-[var(--hero-btn-hover)] sm:mt-3 sm:rounded-[10px] sm:px-7 sm:py-2.5 sm:text-xs md:mt-5 md:px-9 md:py-3 md:text-sm"
+                      style={
+                        {
+                          backgroundColor: BUTTON.bg,
+                          borderColor: BUTTON.border,
+                          color: BUTTON.text,
+                          "--hero-btn-hover": BUTTON.hoverBg,
+                        } as React.CSSProperties
+                      }
+                    >
+                      {slide.cta}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      ))}
 
-      {/* Arrows and dots (shown only when there is more than one slide) */}
-      {multiple && (
-        <>
+          {/* Arrows (smaller on phones so they don't cover the image) */}
           <button
             aria-label="Previous slide"
             onClick={prev}
-            className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 text-white transition-colors hover:bg-white hover:text-[#8F3057] md:flex"
+            className="absolute left-1.5 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#222] shadow-md transition hover:scale-105 sm:left-3 sm:h-9 sm:w-9 md:left-4 md:h-12 md:w-12"
           >
-            <ChevronLeft size={26} strokeWidth={1.5} />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" strokeWidth={1.8} />
           </button>
           <button
             aria-label="Next slide"
             onClick={next}
-            className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 text-white transition-colors hover:bg-white hover:text-[#8F3057] md:flex"
+            className="absolute right-1.5 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#222] shadow-md transition hover:scale-105 sm:right-3 sm:h-9 sm:w-9 md:right-4 md:h-12 md:w-12"
           >
-            <ChevronRight size={26} strokeWidth={1.5} />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" strokeWidth={1.8} />
           </button>
 
-          <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-3">
+          {/* Dots (bottom-right pill) */}
+          <div className="absolute bottom-1.5 right-1.5 z-20 flex items-center gap-1 rounded-full bg-white/70 px-1.5 py-1 backdrop-blur-sm sm:bottom-3 sm:right-3 sm:gap-1.5 sm:px-2.5 sm:py-1.5 md:bottom-4 md:right-4">
             {SLIDES.map((slide, i) => (
               <button
-                key={slide.title}
+                key={slide.image}
                 aria-label={`Go to slide ${i + 1}`}
+                aria-current={i === current}
                 onClick={() => setCurrent(i)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  i === current ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"
+                className={`h-1 rounded-full transition-all duration-300 sm:h-1.5 ${
+                  i === current
+                    ? "w-3 bg-[#8F3057] sm:w-5"
+                    : "w-1 bg-[#8F3057]/40 hover:bg-[#8F3057]/70 sm:w-1.5"
                 }`}
               />
             ))}
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </section>
   );
 }
