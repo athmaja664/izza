@@ -72,7 +72,7 @@ export default function AboutSection() {
               style={{ backgroundColor: COLORS.frameBg }}
             >
               <Image
-                src="/images/about1.jpg"
+                src="/images/about4.jpg"
                 alt={IMAGES.main.alt}
                 fill
                 sizes="(min-width: 768px) 28vw, 70vw"
@@ -88,7 +88,7 @@ export default function AboutSection() {
           >
             <div className="relative h-full w-full">
               <Image
-                src="/images/about2.jpg"
+                src="/images/about3.png"
                 alt={IMAGES.small.alt}
                 fill
                 sizes="(min-width: 768px) 16vw, 40vw"

@@ -142,11 +142,11 @@ export default function Footer() {
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" aria-label={`${BRAND} home`} className="inline-block">
               <Image
-                src="/images/logo-nav.png"
+                src="/images/logooo.png"
                 alt={BRAND}
                 width={200}
                 height={200}
-                className="h-16 w-auto object-contain brightness-0 invert opacity-90 transition-opacity hover:opacity-100 sm:h-20 md:h-24"
+                className="h-24 w-auto object-contain brightness-0 invert opacity-90 transition-opacity hover:opacity-100 sm:h-28 md:h-36"
               />
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#F3E7D3]/75">{TAGLINE}</p>

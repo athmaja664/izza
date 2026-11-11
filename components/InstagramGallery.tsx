@@ -17,27 +17,27 @@ const INSTAGRAM_PROFILE_URL = "";
    not live Instagram posts. */
 const GALLERY = [
   {
-    image: "/images/instagram1.jpg",
+    image: "/images/inst6.jpg",
     alt: "Embroidered kurta in soft pastel shades",
     postUrl: "",
   },
   {
-    image: "/images/instagram2.jpg",
+    image: "/images/inst2.jpg",
     alt: "Close-up of intricate embroidery and fabric detail",
     postUrl: "",
   },
   {
-    image: "/images/instagram3.jpg",
+    image: "/images/inst3.jpg",
     alt: "Ethnic outfit styled for a festive occasion",
     postUrl: "",
   },
   {
-    image: "/images/instagram4.jpg",
+    image: "/images/inst4.jpg",
     alt: "Collection of women's ethnic wear in soft colours",
     postUrl: "",
   },
   {
-    image: "/images/instagram5.jpg",
+    image: "/images/inst5.png",
     alt: "Fashion product photography with floral styling",
     postUrl: "",
   },
