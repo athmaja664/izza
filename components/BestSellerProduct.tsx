@@ -284,12 +284,12 @@ export default function BestSellers({
         )}
 
         <div className="mt-6 text-center md:mt-8">
-          <Link
-            href={viewAllHref}
-            className="inline-block rounded-full border border-[color:var(--bs-border)] bg-[color:var(--bs-card)] px-8 py-3 text-xs uppercase tracking-[0.18em] text-[color:var(--bs-ink)] transition-colors duration-300 hover:border-[color:var(--bs-accent)] hover:bg-[color:var(--bs-badge-bg)] md:text-sm"
-          >
-            View All Best Sellers
-          </Link>
+        <Link
+  href={viewAllHref}
+  className="inline-block rounded-full border border-[#B0406A] bg-[#B0406A] px-8 py-3 text-xs uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:border-[#8F3057] hover:bg-[#8F3057] md:text-sm"
+>
+  View All Best Sellers
+</Link>
         </div>
       </div>
     </section>
