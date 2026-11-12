@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
       }
     >
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {[
           {
             label: "Total Revenue",
@@ -137,16 +137,16 @@ export default function AdminDashboardPage() {
             icon: AlertTriangle,
           },
         ].map(({ label, value, hint, icon: Icon }) => (
-          <div key={label} className={`${card} p-4 sm:p-5`}>
+          <div key={label} className={`${card} min-w-0 p-4 sm:p-5`}>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B5607A]">
+              <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B5607A] sm:tracking-[0.16em]">
                 {label}
               </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFF5F7] text-[#B20947]">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF5F7] text-[#B20947]">
                 <Icon size={16} />
               </span>
             </div>
-            <p className={`${serif} mt-2 text-[28px] font-semibold leading-none text-[#332B2B] sm:text-[34px]`}>
+            <p className={`${serif} lining-nums mt-2 text-[24px] font-semibold leading-none text-[#332B2B] sm:text-[34px]`}>
               {value}
             </p>
             <p className="mt-2 text-[12px] text-[#6f6565]">{hint}</p>
@@ -156,38 +156,38 @@ export default function AdminDashboardPage() {
 
       {/* Business Growth Chart + Sales Attribution */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <section className={`${card} p-5 sm:p-6`}>
+        <section className={`${card} min-w-0 p-4 sm:p-6`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B5607A]">
                 Business Growth
               </p>
-              <h2 className={`${serif} text-[24px] font-medium text-[#332B2B]`}>
+              <h2 className={`${serif} text-[22px] font-medium text-[#332B2B] sm:text-[24px]`}>
                 6-Month Revenue &amp; Order Trend
               </h2>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#eef7f0] px-3 py-1 text-[12px] font-semibold text-[#3a6b42]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#eef7f0] px-3 py-1 text-[11px] font-semibold text-[#3a6b42] sm:text-[12px]">
               <TrendingUp size={14} /> Growing steadily
             </span>
           </div>
 
-          <div className="mt-6 grid grid-cols-6 items-end gap-3 pt-4 sm:gap-5">
+          <div className="mt-5 grid grid-cols-6 items-end gap-1.5 pt-3 sm:mt-6 sm:gap-5 sm:pt-4">
             {metrics.series.map((item) => {
               const pct = Math.max(18, Math.round((item.revenue / metrics.maxRevenue) * 100));
               return (
-                <div key={item.month} className="flex flex-col items-center">
-                  <span className="mb-1.5 text-[11px] font-semibold text-[#332B2B]">
+                <div key={item.month} className="flex min-w-0 flex-col items-center">
+                  <span className="mb-1.5 text-[10px] font-semibold text-[#332B2B] sm:text-[11px]">
                     ₹{Math.round(item.revenue / 1000)}k
                   </span>
-                  <div className="flex h-40 w-full max-w-[48px] items-end rounded-t-xl bg-[#EFE2CE] p-1">
+                  <div className="flex h-28 w-full max-w-[48px] items-end rounded-t-xl bg-[#EFE2CE] p-1 sm:h-40">
                     <div
                       className="w-full rounded-t-lg bg-gradient-to-t from-[#B20947] to-[#E99A9F] transition-all duration-500"
                       style={{ height: `${pct}%` }}
                       title={`${item.month}: ${inr(item.revenue)} (${item.orders} orders)`}
                     />
                   </div>
-                  <span className="mt-2 text-[12px] font-medium text-[#6f6565]">{item.month}</span>
-                  <span className="text-[10px] text-[#9b9090]">{item.orders} ord</span>
+                  <span className="mt-2 text-[11px] font-medium text-[#6f6565] sm:text-[12px]">{item.month}</span>
+                  <span className="text-[9px] text-[#9b9090] sm:text-[10px]">{item.orders} ord</span>
                 </div>
               );
             })}
@@ -195,7 +195,7 @@ export default function AdminDashboardPage() {
         </section>
 
         {/* Product-wise sales & Meta Ads tracking */}
-        <section className={`${card} flex flex-col justify-between p-5 sm:p-6`}>
+        <section className={`${card} flex min-w-0 flex-col justify-between p-4 sm:p-6`}>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B5607A]">
               Sales Report &amp; Meta Ads
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
       {/* Recent 4 Orders & Recent 4 Customers */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Recent Orders */}
-        <section className={`${card} p-5 sm:p-6`}>
+        <section className={`${card} min-w-0 p-4 sm:p-6`}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B5607A]">
@@ -309,7 +309,7 @@ export default function AdminDashboardPage() {
         </section>
 
         {/* Recent Customers */}
-        <section className={`${card} p-5 sm:p-6`}>
+        <section className={`${card} min-w-0 p-4 sm:p-6`}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B5607A]">
@@ -373,4 +373,3 @@ export default function AdminDashboardPage() {
     </AdminShell>
   );
 }
-

@@ -48,8 +48,8 @@ export default function AdminOrdersPage() {
       title="Orders"
       subtitle="Click any order to view full payment, delivery, and product details, or click a customer name"
     >
-      <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
-        <div className="relative min-w-[220px] flex-1">
+      <div className={`${card} flex flex-col gap-3 p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between`}>
+        <div className="relative w-full lg:min-w-[220px] lg:flex-1">
           <Search
             size={16}
             className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F3057]"
@@ -67,7 +67,7 @@ export default function AdminOrdersPage() {
               key={s}
               type="button"
               onClick={() => setStatusFilter(s)}
-              className={`rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-colors ${
+              className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:px-3.5 sm:text-[12px] ${
                 statusFilter === s
                   ? "border-[#B20947] bg-[#F8EAE4] text-[#B20947]"
                   : "border-[#E8B8C5] bg-[#FAF3E8] text-[#332B2B] hover:border-[#B20947]"
@@ -83,7 +83,7 @@ export default function AdminOrdersPage() {
         {filtered.map((ord) => (
           <div
             key={ord.id}
-            className={`${card} flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5`}
+            className={`${card} flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5`}
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
@@ -123,8 +123,8 @@ export default function AdminOrdersPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="text-right">
+            <div className="flex w-full items-center justify-between gap-3 border-t border-[#DFCBB3] pt-3 sm:w-auto sm:justify-end sm:border-t-0 sm:pt-0">
+              <div className="text-left sm:text-right">
                 <p className="text-[18px] font-semibold text-[#332B2B]">{inr(ord.total)}</p>
                 {ord.couponCode && (
                   <p className="text-[11px] text-[#5f7a62]">Coupon: {ord.couponCode}</p>
@@ -132,7 +132,7 @@ export default function AdminOrdersPage() {
               </div>
               <Link
                 href={`/admin/orders/details?id=${encodeURIComponent(ord.id)}`}
-                className={`${outlineBtn} gap-1.5`}
+                className={`${outlineBtn} shrink-0 gap-1.5`}
               >
                 Order Details <ArrowRight size={14} />
               </Link>

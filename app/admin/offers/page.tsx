@@ -36,7 +36,7 @@ export default function AdminOffersPage() {
 
           <div className="mt-5 space-y-5">
             <div className="rounded-xl border border-[#DFCBB3] bg-[#EFE2CE] p-4">
-              <label className="flex cursor-pointer items-center justify-between">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
                 <span className="text-[14px] font-semibold text-[#332B2B]">
                   Enable First Order Discount
                 </span>
@@ -46,7 +46,7 @@ export default function AdminOffersPage() {
                   onChange={(e) =>
                     setOffers({ ...offers, firstOrderEnabled: e.target.checked })
                   }
-                  className="h-4 w-4 accent-[#B20947]"
+                  className="h-4 w-4 shrink-0 accent-[#B20947]"
                 />
               </label>
               <label className="mt-3 block">
@@ -68,7 +68,7 @@ export default function AdminOffersPage() {
             </div>
 
             <div className="rounded-xl border border-[#DFCBB3] bg-[#EFE2CE] p-4">
-              <label className="flex cursor-pointer items-center justify-between">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
                 <span className="text-[14px] font-semibold text-[#332B2B]">
                   Enable Combo Offer
                 </span>
@@ -78,7 +78,7 @@ export default function AdminOffersPage() {
                   onChange={(e) =>
                     setOffers({ ...offers, comboEnabled: e.target.checked })
                   }
-                  className="h-4 w-4 accent-[#B20947]"
+                  className="h-4 w-4 shrink-0 accent-[#B20947]"
                 />
               </label>
 
@@ -93,7 +93,7 @@ export default function AdminOffersPage() {
                     onChange={(e) => setOffers({ ...offers, comboTitle: e.target.value })}
                   />
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-1 block text-[12px] text-[#6f6565]">
                       Minimum Items
@@ -142,7 +142,7 @@ export default function AdminOffersPage() {
 
             <div className="mt-5 space-y-4">
               <div className={`${cardCream} p-4`}>
-                <label className="flex cursor-pointer items-center justify-between">
+                <label className="flex cursor-pointer items-center justify-between gap-3">
                   <div>
                     <p className="text-[14px] font-semibold text-[#332B2B]">
                       Free Shipping in Kerala (PIN 67xxxx–69xxxx)
@@ -157,7 +157,7 @@ export default function AdminOffersPage() {
                     onChange={(e) =>
                       setOffers({ ...offers, freeShippingKerala: e.target.checked })
                     }
-                    className="h-4 w-4 accent-[#B20947]"
+                    className="h-4 w-4 shrink-0 accent-[#B20947]"
                   />
                 </label>
               </div>

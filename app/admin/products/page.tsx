@@ -255,8 +255,8 @@ export default function AdminProductsPage() {
       }
     >
       {/* Filters bar */}
-      <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
-        <div className="relative flex-1 min-w-[220px]">
+      <div className={`${card} flex flex-col gap-3 p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between`}>
+        <div className="relative w-full lg:min-w-[220px] lg:flex-1">
           <Search
             size={16}
             className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F3057]"
@@ -274,7 +274,7 @@ export default function AdminProductsPage() {
               key={cat}
               type="button"
               onClick={() => setCatFilter(cat)}
-              className={`rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-colors ${
+              className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:px-3.5 sm:text-[12px] ${
                 catFilter === cat
                   ? "border-[#B20947] bg-[#F8EAE4] text-[#B20947]"
                   : "border-[#E8B8C5] bg-[#FAF3E8] text-[#332B2B] hover:border-[#B20947]"
@@ -291,7 +291,7 @@ export default function AdminProductsPage() {
         {filtered.map((p) => {
           const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
           return (
-            <div key={p.id} className={`${card} flex flex-col justify-between p-4`}>
+            <div key={p.id} className={`${card} flex min-w-0 flex-col justify-between p-4`}>
               <div className="flex gap-3.5">
                 <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-[#E8B8C5] bg-[#FFF5F7]">
                   <Image
@@ -518,9 +518,9 @@ export default function AdminProductsPage() {
                 <span className="mb-1 block text-[13px] font-medium text-[#332B2B]">
                   Product Image (Path or Upload)
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <input
-                    className={inputCls}
+                    className={`${inputCls} min-w-0 flex-1`}
                     value={form.image}
                     onChange={(e) => setForm({ ...form, image: e.target.value })}
                     placeholder="/images/kurtas1.jpg"
@@ -604,7 +604,7 @@ export default function AdminProductsPage() {
                 {/* Manual custom size input */}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <input
-                    className={`${inputCls} max-w-[180px] !py-2 text-[13px]`}
+                    className={`${inputCls} w-full sm:max-w-[180px] !py-2 text-[13px]`}
                     value={customSize}
                     onChange={(e) => setCustomSize(e.target.value)}
                     placeholder="Custom size (e.g. XS, 4XL)"

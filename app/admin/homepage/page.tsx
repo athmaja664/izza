@@ -309,9 +309,9 @@ export default function AdminHomepagePage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat, idx) => (
-            <div key={cat.id} className={`${cardCream} flex flex-col justify-between p-4`}>
-              <div className="flex gap-3.5">
-                <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-t-full border border-[#E8B8C5] bg-[#FAF3E8]">
+            <div key={cat.id} className={`${cardCream} flex min-w-0 flex-col justify-between p-4`}>
+              <div className="flex flex-col gap-3.5 min-[420px]:flex-row">
+                <div className="relative h-28 w-20 shrink-0 self-center overflow-hidden rounded-t-full border border-[#E8B8C5] bg-[#FAF3E8] min-[420px]:self-start">
                   <Image
                     src={cat.image}
                     alt={cat.name}
@@ -393,9 +393,9 @@ export default function AdminHomepagePage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {instagramPosts.map((post, idx) => (
-            <div key={post.id ?? idx} className={`${card} flex flex-col justify-between p-4`}>
-              <div className="flex gap-3.5">
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#E8B8C5] bg-[#FAF3E8]">
+            <div key={post.id ?? idx} className={`${card} flex min-w-0 flex-col justify-between p-4`}>
+              <div className="flex flex-col gap-3.5 min-[420px]:flex-row">
+                <div className="relative h-24 w-24 shrink-0 self-center overflow-hidden rounded-xl border border-[#E8B8C5] bg-[#FAF3E8] min-[420px]:self-start">
                   <Image
                     src={post.image}
                     alt={post.alt}

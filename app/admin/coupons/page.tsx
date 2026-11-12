@@ -83,7 +83,7 @@ export default function AdminCouponsPage() {
               </span>
               <div className="flex gap-2">
                 <input
-                  className={`${inputCls} uppercase`}
+                  className={`${inputCls} min-w-0 flex-1 uppercase`}
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="e.g. FESTIVE20"
@@ -98,7 +98,7 @@ export default function AdminCouponsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[13px] font-medium text-[#332B2B]">
                   Discount Type
@@ -126,7 +126,7 @@ export default function AdminCouponsPage() {
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[13px] font-medium text-[#332B2B]">
                   Min Order (₹)
@@ -179,10 +179,10 @@ export default function AdminCouponsPage() {
           {coupons.map((cpn) => (
             <div
               key={cpn.id}
-              className={`${cpn.active ? card : cardCream} flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5`}
+              className={`${cpn.active ? card : cardCream} flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5`}
             >
-              <div>
-                <div className="flex items-center gap-2.5">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#B20947] bg-[#FFF5F7] px-3 py-1 text-[14px] font-bold tracking-wider text-[#B20947]">
                     <Tag size={14} /> {cpn.code}
                   </span>

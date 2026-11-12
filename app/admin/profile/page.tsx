@@ -146,7 +146,7 @@ export default function AdminProfilePage() {
           </div>
 
           <div className="mt-5 flex items-center gap-3">
-            <button type="submit" className={`${solidBtn} gap-2`}>
+            <button type="submit" className={`${solidBtn} w-full gap-2 sm:w-auto`}>
               {saved && <Check size={16} />}
               {saved ? "Profile Saved" : "Update Profile"}
             </button>

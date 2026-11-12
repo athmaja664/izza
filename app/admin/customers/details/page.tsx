@@ -47,13 +47,13 @@ function CustomerDetailsInner() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
         {/* Customer Profile Card */}
-        <section className={`${card} p-5 sm:p-6`}>
-          <div className="flex items-center gap-4 border-b border-[#E8CFD2] pb-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#E8B8C5] bg-[#FFF5F7] text-[24px] font-semibold text-[#B20947]">
+        <section className={`${card} min-w-0 p-4 sm:p-6`}>
+          <div className="flex items-center gap-3.5 border-b border-[#E8CFD2] pb-4 sm:gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#E8B8C5] bg-[#FFF5F7] text-[22px] font-semibold text-[#B20947] sm:h-14 sm:w-14 sm:text-[24px]">
               {customer.name.charAt(0)}
             </span>
-            <div>
-              <h2 className={`${serif} text-[28px] font-medium leading-none text-[#332B2B]`}>
+            <div className="min-w-0">
+              <h2 className={`${serif} truncate text-[24px] font-medium leading-none text-[#332B2B] sm:text-[28px]`}>
                 {customer.name}
               </h2>
               <p className="mt-1 text-[12px] text-[#6f6565]">
@@ -64,12 +64,12 @@ function CustomerDetailsInner() {
 
           <div className="mt-4 space-y-3 text-[14px]">
             <p className="flex items-center gap-2.5 text-[#332B2B]">
-              <Phone size={16} className="text-[#B20947]" />
+              <Phone size={16} className="shrink-0 text-[#B20947]" />
               +91 {customer.phone}
             </p>
-            <p className="flex items-center gap-2.5 text-[#332B2B]">
-              <Mail size={16} className="text-[#B20947]" />
-              {customer.email}
+            <p className="flex min-w-0 items-center gap-2.5 text-[#332B2B]">
+              <Mail size={16} className="shrink-0 text-[#B20947]" />
+              <span className="break-all">{customer.email}</span>
             </p>
             <p className="flex items-start gap-2.5 text-[#6f6565]">
               <MapPin size={16} className="mt-0.5 shrink-0 text-[#B20947]" />

@@ -63,7 +63,7 @@ export default function AdminCustomersPage() {
         {filtered.map((cust) => {
           const stat = statsMap.get(cust.id) ?? { count: 0, spent: 0 };
           return (
-            <div key={cust.id} className={`${card} flex flex-col justify-between p-5`}>
+            <div key={cust.id} className={`${card} flex min-w-0 flex-col justify-between p-4 sm:p-5`}>
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <Link

@@ -51,7 +51,7 @@ function OrderDetailsInner() {
         >
           <ArrowLeft size={15} /> Back to All Orders
         </Link>
-        <div className="flex items-center gap-2.5">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2.5 sm:w-auto sm:justify-end">
           <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#6f6565]">
             Update Status:
           </span>
@@ -124,7 +124,7 @@ function OrderDetailsInner() {
           </h2>
           <ul className="mt-4 divide-y divide-[#E8CFD2]">
             {order.items.map((item) => (
-              <li key={`${item.id}-${item.size}`} className="flex items-center gap-4 py-3.5">
+              <li key={`${item.id}-${item.size}`} className="flex flex-wrap items-center gap-3 py-3.5 sm:flex-nowrap sm:gap-4">
                 <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E8B8C5] bg-[#FFF5F7]">
                   <Image
                     src={item.image}
