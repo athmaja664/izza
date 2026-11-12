@@ -48,7 +48,7 @@ function StatCard({
   href?: string;
 }) {
   const body = (
-    <div className="h-full rounded-sm border border-[#E8CFD2] bg-white p-4 transition-colors hover:border-[#B20947]/40 sm:p-6">
+    <div className="h-full rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 transition-colors hover:border-[#B20947]/40 sm:p-6">
       <p className="m-0 text-[10px] uppercase tracking-[0.15em] text-black/50 sm:text-[11px] sm:tracking-[0.25em]">
         {label}
       </p>
@@ -84,7 +84,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`min-w-0 rounded-sm border border-[#E8CFD2] bg-white p-4 sm:p-6 ${className}`}>
+    <section className={`min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 sm:p-6 ${className}`}>
       <h2 className={`${serif} m-0 text-[24px] font-medium sm:text-[28px]`} style={{ color: CRIMSON }}>
         {title}
       </h2>
@@ -329,7 +329,7 @@ export default function AdminDashboardPage() {
         >
           Recent orders
         </h2>
-        <div className="mt-4 rounded-sm border border-[#E8CFD2] bg-white sm:mt-5">
+        <div className="mt-4 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] sm:mt-5">
           {recentOrders.length === 0 ? (
             <p className="m-0 p-5 text-[15px] text-black/55 sm:p-6">No orders yet.</p>
           ) : (
@@ -373,7 +373,7 @@ export default function AdminDashboardPage() {
         >
           Recent customers
         </h2>
-        <div className="mt-4 rounded-sm border border-[#E8CFD2] bg-white sm:mt-5">
+        <div className="mt-4 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] sm:mt-5">
           {recentCustomers.length === 0 ? (
             <p className="m-0 p-5 text-[15px] text-black/55 sm:p-6">No customers have registered yet.</p>
           ) : (
