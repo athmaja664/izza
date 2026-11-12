@@ -14,7 +14,7 @@ const OFFER_INTERVAL_MS = 2000;
 const SLIDE_DURATION_MS = 1000;
 
 /* Navbar hide/show: ignore tiny scrolls, and never hide near the top of the page */
-const SCROLL_THRESHOLD = 8;
+const SCROLL_THRESHOLD = 16;
 const ALWAYS_SHOW_BELOW = 80;
 
 /* WhatsApp chat link (country code 91 + number) */
@@ -108,21 +108,30 @@ export default function Navbar() {
 
   // Hide the navbar when scrolling down, show it again when scrolling up
   useEffect(() => {
-    let lastY = window.scrollY;
+    let lastY = Math.max(0, window.scrollY);
+    let hiddenState = false;
     let ticking = false;
+    let rafId = 0;
+
+    const commitHidden = (next: boolean) => {
+      if (hiddenState !== next) {
+        hiddenState = next;
+        setHidden(next);
+      }
+    };
 
     const update = () => {
-      const y = window.scrollY;
+      const y = Math.max(0, window.scrollY);
       const diff = y - lastY;
 
-      if (y < ALWAYS_SHOW_BELOW) {
-        setHidden(false);
+      if (menuOpen || searchOpen || y < ALWAYS_SHOW_BELOW) {
+        commitHidden(false);
         lastY = y;
       } else if (diff > SCROLL_THRESHOLD) {
-        setHidden(true); // scrolling down
+        commitHidden(true); // scrolling down
         lastY = y;
       } else if (diff < -SCROLL_THRESHOLD) {
-        setHidden(false); // scrolling up
+        commitHidden(false); // scrolling up
         lastY = y;
       }
       ticking = false;
@@ -131,19 +140,24 @@ export default function Navbar() {
     const onScroll = () => {
       if (!ticking) {
         ticking = true;
-        requestAnimationFrame(update);
+        rafId = requestAnimationFrame(update);
       }
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Lock body scroll when the drawer is open
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => {
-      document.body.style.overflow = "";
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [menuOpen, searchOpen]);
+
+  // Lock body scroll only while the mobile drawer is open
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
     };
   }, [menuOpen]);
 
@@ -332,7 +346,7 @@ export default function Navbar() {
       </header>
 
       {/* MOBILE DRAWER */}
-      <div className={`fixed inset-0 z-[60] lg:hidden ${menuOpen ? "visible" : "invisible"}`}>
+      <div className={`fixed inset-0 z-[60] lg:hidden ${menuOpen ? "visible" : "pointer-events-none invisible"}`}>
         <div
           onClick={() => setMenuOpen(false)}
           className={`absolute inset-0 bg-[#382B2B]/40 transition-opacity duration-300 ${
@@ -355,7 +369,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-6 py-6">
+          <nav className="flex-1 overflow-y-auto overscroll-contain px-6 py-6">
             {NAV_LINKS.map((link) => (
               <div key={link.label} className="border-b border-[#382B2B]/10 py-3">
                 <Link
@@ -449,7 +463,7 @@ export default function Navbar() {
       <div
         onClick={() => setSearchOpen(false)}
         className={`fixed inset-0 z-[70] bg-[#382B2B]/50 transition-opacity duration-300 ${
-          searchOpen ? "visible opacity-100" : "invisible opacity-0"
+          searchOpen ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
         }`}
       >
         <div

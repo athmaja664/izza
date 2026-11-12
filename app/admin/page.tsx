@@ -101,14 +101,26 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminShell
-      title="Business Dashboard"
-      subtitle="Live overview of Izha Blooms sales, orders, customers, inventory & Meta Ads performance"
+      title="Dashboard"
       actions={
         <Link href="/admin/products" className={outlineBtn}>
           + Manage Products
         </Link>
       }
     >
+      {/* Welcome heading (same style as the Mirqas dashboard) */}
+      <div className="mb-6">
+        <p className="text-[12px] font-normal uppercase tracking-[0.2em] text-[#6f6565]">
+          Signed in as Izha Admin
+        </p>
+        <h2
+          className={`${serif} mt-3 text-[32px] font-medium leading-tight text-[#B20947] sm:text-[44px]`}
+        >
+          Welcome back, Izha Admin
+        </h2>
+        <p className="mt-2 text-[15px] text-[#6f6565]">Here is a quick look at your store.</p>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {[
@@ -139,17 +151,17 @@ export default function AdminDashboardPage() {
         ].map(({ label, value, hint, icon: Icon }) => (
           <div key={label} className={`${card} min-w-0 p-4 sm:p-5`}>
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B5607A] sm:tracking-[0.16em]">
+              <span className="truncate text-[12px] font-normal uppercase tracking-[0.2em] text-[#6f6565]">
                 {label}
               </span>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF5F7] text-[#B20947]">
                 <Icon size={16} />
               </span>
             </div>
-            <p className={`${serif} lining-nums mt-2 text-[24px] font-semibold leading-none text-[#332B2B] sm:text-[34px]`}>
+            <p className={`${serif} lining-nums mt-3 text-[24px] font-medium leading-none text-[#B20947] sm:text-[34px]`}>
               {value}
             </p>
-            <p className="mt-2 text-[12px] text-[#6f6565]">{hint}</p>
+            <p className="mt-3 text-[13px] text-[#6f6565]">{hint}</p>
           </div>
         ))}
       </div>

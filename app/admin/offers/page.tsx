@@ -5,6 +5,7 @@ import { Check, Percent, Truck } from "lucide-react";
 import { KEYS, useStored } from "@/lib/izha-store";
 import { DEFAULT_OFFER_SETTINGS, type OfferSettings } from "@/lib/demo-store";
 import AdminShell, { card, cardCream, inputCls } from "@/components/admin/AdminShell";
+import AlertBox from "@/components/izha/AlertBox";
 import { serif, solidBtn } from "@/components/izha/ui";
 
 export default function AdminOffersPage() {
@@ -208,6 +209,15 @@ export default function AdminOffersPage() {
               </label>
             </div>
           </div>
+
+          {saved && (
+            <AlertBox
+              variant="success"
+              message="Offer & shipping rules saved live for storefront Checkout."
+              onClose={() => setSaved(false)}
+              className="mt-5"
+            />
+          )}
 
           <button type="submit" className={`${solidBtn} mt-6 w-full gap-2`}>
             {saved && <Check size={16} />}

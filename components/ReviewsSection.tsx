@@ -99,7 +99,10 @@ export default function ReviewsSection() {
         </div>
 
         {/* Mobile: swipe sideways · Desktop: 3 columns */}
-        <ul className="flex touch-pan-x snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
+        <ul
+          style={{ touchAction: "manipulation" }}
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden"
+        >
           {REVIEWS.map((r, i) => (
             <li
               key={i}

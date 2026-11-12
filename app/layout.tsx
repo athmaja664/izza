@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} overflow-x-hidden antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} overflow-x-clip antialiased`}
       >
         <StorefrontFrame>{children}</StorefrontFrame>
       </body>

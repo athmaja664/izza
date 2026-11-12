@@ -15,6 +15,7 @@ import AdminShell, {
   inputCls,
   outlineBtn,
 } from "@/components/admin/AdminShell";
+import AlertBox from "@/components/izha/AlertBox";
 import {
   focusRing,
   serif,
@@ -77,6 +78,7 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [customSize, setCustomSize] = useState("");
   const [formError, setFormError] = useState("");
+  const [notice, setNotice] = useState<{ type: "success" | "info"; text: string } | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -229,6 +231,12 @@ export default function AdminProductsPage() {
       };
       setProducts((prev) => [newProd, ...prev]);
     }
+    setNotice({
+      type: "success",
+      text: form.id
+        ? `"${form.name.trim()}" updated successfully.`
+        : `"${form.name.trim()}" added to the catalog.`,
+    });
     setModalOpen(false);
   };
 
@@ -241,7 +249,11 @@ export default function AdminProductsPage() {
   };
 
   const deleteProduct = (id: string) => {
+    const target = products.find((p) => p.id === id);
     setProducts((prev) => prev.filter((p) => p.id !== id));
+    if (target) {
+      setNotice({ type: "info", text: `"${target.name}" removed from catalog.` });
+    }
   };
 
   return (
@@ -254,6 +266,16 @@ export default function AdminProductsPage() {
         </button>
       }
     >
+      {/* Product action alert box */}
+      {notice && (
+        <AlertBox
+          variant={notice.type}
+          message={notice.text}
+          onClose={() => setNotice(null)}
+          className="mb-4"
+        />
+      )}
+
       {/* Filters bar */}
       <div className={`${card} flex flex-col gap-3 p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between`}>
         <div className="relative w-full lg:min-w-[220px] lg:flex-1">
@@ -429,9 +451,12 @@ export default function AdminProductsPage() {
             </h2>
 
             {formError && (
-              <div className="mt-3 rounded-xl bg-[#F9E3E9] px-4 py-2.5 text-[13px] text-[#B20947]">
-                {formError}
-              </div>
+              <AlertBox
+                variant="error"
+                message={formError}
+                onClose={() => setFormError("")}
+                className="mt-3"
+              />
             )}
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">

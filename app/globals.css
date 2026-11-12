@@ -1,13 +1,28 @@
 @import "tailwindcss";
 
+html,
+body {
+  overflow-x: clip;
+}
+
+/* Enable smooth scrolling on desktop devices with fine pointer, while preserving native unhindered touch momentum on mobile */
+@media (min-width: 768px) and (pointer: fine) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 html {
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  overflow-x: hidden;
-  max-width: 100vw;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure smooth inertial scrolling on mobile WebKit */
+.overflow-x-auto,
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
 

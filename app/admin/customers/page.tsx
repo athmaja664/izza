@@ -76,17 +76,17 @@ export default function AdminCustomersPage() {
                     {cust.source}
                   </span>
                 </div>
-                <p className="mt-2 text-[13px] text-[#332B2B]">+91 {cust.phone}</p>
+                <p className="mt-2 tabular-nums text-[13px] text-[#332B2B]">+91 {cust.phone}</p>
                 <p className="truncate text-[13px] text-[#6f6565]">{cust.email}</p>
-                <p className="mt-1 text-[13px] text-[#6f6565]">
+                <p className="mt-1 tabular-nums text-[13px] text-[#6f6565]">
                   {cust.city}, {cust.state} · {cust.pincode}
                 </p>
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-[#E8CFD2] pt-3">
                 <div>
-                  <p className="text-[15px] font-semibold text-[#332B2B]">{inr(stat.spent)}</p>
-                  <p className="text-[11px] text-[#6f6565]">
+                  <p className="tabular-nums text-[15px] font-semibold text-[#332B2B]">{inr(stat.spent)}</p>
+                  <p className="tabular-nums text-[11px] text-[#6f6565]">
                     {stat.count} {stat.count === 1 ? "order" : "orders"}
                   </p>
                 </div>

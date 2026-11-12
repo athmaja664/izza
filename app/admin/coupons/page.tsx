@@ -9,6 +9,7 @@ import {
   type Coupon,
 } from "@/lib/demo-store";
 import AdminShell, { card, cardCream, inputCls, outlineBtn } from "@/components/admin/AdminShell";
+import AlertBox from "@/components/izha/AlertBox";
 import { serif, solidBtn } from "@/components/izha/ui";
 
 export default function AdminCouponsPage() {
@@ -163,9 +164,11 @@ export default function AdminCouponsPage() {
             </label>
 
             {msg && (
-              <p className="rounded-xl bg-[#FFF5F7] px-3.5 py-2.5 text-[13px] text-[#B20947]">
-                {msg}
-              </p>
+              <AlertBox
+                variant={msg.includes("created") ? "success" : "error"}
+                message={msg}
+                onClose={() => setMsg("")}
+              />
             )}
 
             <button type="submit" className={`${solidBtn} w-full`}>

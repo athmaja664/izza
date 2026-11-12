@@ -25,7 +25,7 @@ export default function HeroCarousel() {
   const slides = storedSlides.length > 0 ? storedSlides : DEFAULT_HERO_SLIDES;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   const total = slides.length;
   const activeIndex = current >= total ? 0 : current;
@@ -40,15 +40,20 @@ export default function HeroCarousel() {
     return () => clearTimeout(timer);
   }, [current, paused, next]);
 
-  // Swipe support for mobile
+  // Swipe support for mobile (only when horizontal intent clearly exceeds vertical scroll)
   const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) (diff > 0 ? next : prev)();
-    touchStartX.current = null;
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const diffX = touchStart.current.x - t.clientX;
+    const diffY = touchStart.current.y - t.clientY;
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+      (diffX > 0 ? next : prev)();
+    }
+    touchStart.current = null;
   };
 
   return (
@@ -62,6 +67,7 @@ export default function HeroCarousel() {
         {/* Banner height (width : height). Smaller first number = taller banner.
             mobile 1.6:1 · tablet 2.4:1 · small laptop 2.6:1 · large laptop 2.8:1 */}
         <div
+          style={{ touchAction: "pan-y" }}
           className="group relative aspect-[1.6/1] w-full overflow-hidden rounded-xl shadow-md sm:aspect-[2.4/1] sm:rounded-2xl md:aspect-[2.6/1] lg:aspect-[2.8/1]"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}

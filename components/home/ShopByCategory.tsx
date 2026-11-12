@@ -92,7 +92,8 @@ export default function ShopByCategory({ categories: propCategories }: Props) {
           {/* Scrollable track: cards per view = --n, space between cards = --gap */}
           <div
             ref={trackRef}
-            className="flex min-w-0 flex-1 touch-pan-x snap-x snap-mandatory gap-[var(--gap)] overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-2 [--gap:14px] [--n:2] [scrollbar-width:none] sm:[--gap:20px] sm:[--n:3] md:[--gap:24px] md:[--n:4] lg:[--gap:32px] lg:[--n:5] [&::-webkit-scrollbar]:hidden"
+            style={{ touchAction: "manipulation" }}
+            className="flex min-w-0 flex-1 snap-x snap-mandatory gap-[var(--gap)] overflow-x-auto overscroll-x-contain px-1 py-2 [--gap:14px] [--n:2] [scrollbar-width:none] sm:[--gap:20px] sm:[--n:3] md:scroll-smooth md:[--gap:24px] md:[--n:4] lg:[--gap:32px] lg:[--n:5] [&::-webkit-scrollbar]:hidden"
           >
             {categories.map((cat, i) => (
               <Link

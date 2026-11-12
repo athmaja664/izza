@@ -626,7 +626,7 @@ export default function CollectionCatalog({
       {/* MOBILE: filter side drawer (modal) */}
       <div
         className={`fixed inset-0 z-[80] lg:hidden ${
-          drawer ? "visible" : "invisible"
+          drawer ? "visible" : "pointer-events-none invisible"
         }`}
       >
         <div
@@ -657,7 +657,7 @@ export default function CollectionCatalog({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 pb-6">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6">
             <FilterBody
               filters={filters}
               setFilters={setFilters}

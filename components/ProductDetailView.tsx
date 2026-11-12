@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Check,
   Heart,
   Minus,
   Plus,
@@ -36,6 +35,7 @@ import {
 } from "@/lib/demo-store";
 import { CatalogProductCard } from "@/components/CollectionCatalog";
 import { WhatsAppSvg } from "@/components/WhatsAppFloat";
+import AlertBox from "@/components/izha/AlertBox";
 import {
   EmptyBlock,
   PageShell,
@@ -569,31 +569,24 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
             </button>
           </div>
 
-          {/* Feedback message */}
+          {/* Feedback alert box */}
           {feedback && (
-            <div
-              role="status"
-              className={`mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 text-[13px] ${
-                feedback.type === "error"
-                  ? "border-[#E99A9F] bg-[#FFF5F7] text-[#B20947]"
-                  : "border-[#E8B8C5] bg-white text-[#332B2B]"
-              }`}
-            >
-              <span className="flex items-center gap-2 font-medium">
-                {feedback.type === "success" && (
-                  <Check size={16} className="text-[#5f7a62]" />
-                )}
-                {feedback.text}
-              </span>
-              {feedback.type === "success" && (
-                <Link
-                  href="/addtocart"
-                  className="font-semibold uppercase tracking-[0.1em] text-[#B20947] underline underline-offset-4"
-                >
-                  View Bag ({inCartCount})
-                </Link>
-              )}
-            </div>
+            <AlertBox
+              variant={feedback.type}
+              message={feedback.text}
+              onClose={() => setFeedback(null)}
+              className="mt-4"
+              action={
+                feedback.type === "success" ? (
+                  <Link
+                    href="/addtocart"
+                    className="inline-block text-[12px] font-semibold uppercase tracking-[0.1em] text-[#B20947] underline underline-offset-4"
+                  >
+                    View Bag ({inCartCount})
+                  </Link>
+                ) : undefined
+              }
+            />
           )}
 
           {/* Product Specifications & More Details */}
@@ -660,7 +653,7 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
             role="dialog"
             aria-modal="true"
             aria-labelledby="size-guide-modal-title"
-            className={`${card} relative max-h-[90vh] w-full max-w-xl overflow-y-auto p-5 shadow-2xl sm:p-7`}
+            className={`${card} relative max-h-[90vh] w-full max-w-xl overflow-y-auto overscroll-contain p-5 shadow-2xl sm:p-7`}
           >
             <button
               type="button"
@@ -872,12 +865,12 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
             </div>
 
             {revMsg && (
-              <p
-                role="status"
-                className="mt-3 text-[13px] font-medium text-[#B20947]"
-              >
-                {revMsg}
-              </p>
+              <AlertBox
+                variant={revMsg.startsWith("Thank you") ? "success" : "error"}
+                message={revMsg}
+                onClose={() => setRevMsg("")}
+                className="mt-4"
+              />
             )}
 
             <div className="mt-5 flex justify-end">

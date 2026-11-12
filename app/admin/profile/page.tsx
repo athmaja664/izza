@@ -5,6 +5,7 @@ import { Check, UserCog } from "lucide-react";
 import { KEYS, useStored } from "@/lib/izha-store";
 import { DEFAULT_ADMIN_PROFILE, type AdminProfile } from "@/lib/demo-store";
 import AdminShell, { card, cardCream, inputCls, outlineBtn } from "@/components/admin/AdminShell";
+import AlertBox from "@/components/izha/AlertBox";
 import { serif, solidBtn } from "@/components/izha/ui";
 
 export default function AdminProfilePage() {
@@ -145,6 +146,15 @@ export default function AdminProfilePage() {
             </label>
           </div>
 
+          {saved && (
+            <AlertBox
+              variant="success"
+              message="Admin studio profile details updated."
+              onClose={() => setSaved(false)}
+              className="mt-4"
+            />
+          )}
+
           <div className="mt-5 flex items-center gap-3">
             <button type="submit" className={`${solidBtn} w-full gap-2 sm:w-auto`}>
               {saved && <Check size={16} />}
@@ -197,7 +207,14 @@ export default function AdminProfilePage() {
             </label>
           </div>
 
-          {pwMsg && <p className="mt-3 text-[13px] font-medium text-[#B20947]">{pwMsg}</p>}
+          {pwMsg && (
+            <AlertBox
+              variant={pwMsg.includes("updated") ? "success" : "error"}
+              message={pwMsg}
+              onClose={() => setPwMsg("")}
+              className="mt-3"
+            />
+          )}
 
           <button type="submit" className={`${outlineBtn} mt-5 w-full`}>
             Change Password

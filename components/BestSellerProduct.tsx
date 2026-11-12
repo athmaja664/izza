@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -219,7 +219,10 @@ export default function BestSellers({
           <p className="text-center text-[#8a7e82]">Our best sellers will be back shortly.</p>
         ) : (
           /* Mobile: 2 cards per screen, swipe to the next 2 · Tablet: 2 cols · Desktop: 4 cols */
-          <ul className="flex touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4 lg:gap-5 [&::-webkit-scrollbar]:hidden">
+          <ul
+            style={{ touchAction: "manipulation" }}
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4 lg:gap-5 [&::-webkit-scrollbar]:hidden"
+          >
             {items.map((p, i) => (
               <li
                 key={p.id}

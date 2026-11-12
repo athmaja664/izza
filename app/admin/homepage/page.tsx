@@ -13,6 +13,7 @@ import {
   type InstagramPost,
 } from "@/lib/demo-store";
 import AdminShell, { card, cardCream, inputCls, outlineBtn } from "@/components/admin/AdminShell";
+import AlertBox from "@/components/izha/AlertBox";
 import { serif, solidBtn } from "@/components/izha/ui";
 
 export default function AdminHomepagePage() {
@@ -166,6 +167,15 @@ export default function AdminHomepagePage() {
         </div>
       }
     >
+      {savedBanner && (
+        <AlertBox
+          variant="success"
+          message="Homepage Hero, Categories & Instagram changes are now live on the storefront."
+          onClose={() => setSavedBanner(false)}
+          className="mb-5"
+        />
+      )}
+
       {/* Section 1: Central Hero Carousel Banners */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

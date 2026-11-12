@@ -26,7 +26,7 @@ export default function PreLoader({ duration = 3500 }: PreLoaderProps) {
     <div
       style={{ backgroundColor: "#f0e8dc" }}
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500 ${
-        fadeOut ? "opacity-0" : "opacity-100"
+        fadeOut ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

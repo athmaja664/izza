@@ -65,29 +65,30 @@ function CustomerDetailsInner() {
           <div className="mt-4 space-y-3 text-[14px]">
             <p className="flex items-center gap-2.5 text-[#332B2B]">
               <Phone size={16} className="shrink-0 text-[#B20947]" />
-              +91 {customer.phone}
+              <span className="tabular-nums leading-snug">+91 {customer.phone}</span>
             </p>
             <p className="flex min-w-0 items-center gap-2.5 text-[#332B2B]">
               <Mail size={16} className="shrink-0 text-[#B20947]" />
-              <span className="break-all">{customer.email}</span>
+              <span className="break-all leading-snug">{customer.email}</span>
             </p>
             <p className="flex items-start gap-2.5 text-[#6f6565]">
               <MapPin size={16} className="mt-0.5 shrink-0 text-[#B20947]" />
-              <span>
-                {customer.address}, {customer.city}, {customer.state} — {customer.pincode}
+              <span className="leading-snug">
+                {customer.address}, {customer.city}, {customer.state} —{" "}
+                <span className="tabular-nums">{customer.pincode}</span>
               </span>
             </p>
           </div>
 
           <div className={`${cardCream} mt-5 grid grid-cols-2 gap-3 p-4 text-center`}>
             <div>
-              <p className={`${serif} text-[28px] font-semibold text-[#B20947]`}>
+              <p className={`${serif} lining-nums tabular-nums text-[28px] font-semibold leading-tight text-[#B20947]`}>
                 {customerOrders.length}
               </p>
               <p className="text-[12px] text-[#6f6565]">Total Orders</p>
             </div>
             <div>
-              <p className={`${serif} text-[28px] font-semibold text-[#332B2B]`}>
+              <p className={`${serif} lining-nums tabular-nums text-[28px] font-semibold leading-tight text-[#332B2B]`}>
                 {inr(totalSpent)}
               </p>
               <p className="text-[12px] text-[#6f6565]">Lifetime Spend</p>
@@ -113,15 +114,15 @@ function CustomerDetailsInner() {
                   className="block rounded-xl border border-[#DFCBB3] bg-[#EFE2CE] p-4 transition-colors hover:border-[#B20947] hover:bg-[#F8EAE4]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-[#B20947]">{ord.id}</span>
+                    <span className="tabular-nums font-semibold text-[#B20947]">{ord.id}</span>
                     <span className="rounded-full bg-[#FAF3E8] px-2.5 py-0.5 text-[11px] font-semibold text-[#332B2B]">
                       {ord.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-[13px] text-[#6f6565]">
+                  <p className="mt-1 tabular-nums text-[13px] text-[#6f6565]">
                     {ord.createdAt} · {ord.paymentMethod} ({ord.paymentStatus})
                   </p>
-                  <p className="mt-1.5 text-[14px] font-semibold text-[#332B2B]">
+                  <p className="mt-1.5 tabular-nums text-[14px] font-semibold text-[#332B2B]">
                     Total: {inr(ord.total)} · {ord.items.map((i) => `${i.name} (${i.size})`).join(", ")}
                   </p>
                 </Link>

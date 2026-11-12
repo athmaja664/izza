@@ -35,6 +35,7 @@ import {
   type OfferSettings,
 } from "@/lib/demo-store";
 import { WhatsAppSvg } from "@/components/WhatsAppFloat";
+import AlertBox from "@/components/izha/AlertBox";
 import {
   EmptyBlock,
   FlowerBadge,
@@ -429,7 +430,14 @@ export default function CheckoutPage() {
                       Sign In
                     </button>
                   </div>
-                  {authNote && <p className="mt-2 text-[12px] text-[#B20947]">{authNote}</p>}
+                  {authNote && (
+                    <AlertBox
+                      variant={authNote.startsWith("Signed in") ? "success" : "error"}
+                      message={authNote}
+                      onClose={() => setAuthNote("")}
+                      className="mt-3"
+                    />
+                  )}
                 </div>
               )}
 
@@ -448,9 +456,12 @@ export default function CheckoutPage() {
               </p>
 
               {error && (
-                <div role="alert" className="mt-4 rounded-xl bg-[#F9E3E9] px-4 py-3 text-[13px] text-[#B20947]">
-                  {error}
-                </div>
+                <AlertBox
+                  variant="error"
+                  message={error}
+                  onClose={() => setError("")}
+                  className="mt-4"
+                />
               )}
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -707,9 +718,12 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {couponMsg && (
-                  <p className={`mt-1.5 text-[12px] ${couponMsg.ok ? "text-[#3f6a46]" : "text-[#B20947]"}`}>
-                    {couponMsg.text}
-                  </p>
+                  <AlertBox
+                    variant={couponMsg.ok ? "success" : "error"}
+                    message={couponMsg.text}
+                    onClose={() => setCouponMsg(null)}
+                    className="mt-2.5"
+                  />
                 )}
               </div>
 

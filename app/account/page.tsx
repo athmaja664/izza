@@ -26,6 +26,7 @@ import {
 } from "@/lib/izha-store";
 import { DEFAULT_ORDERS, type DemoOrder } from "@/lib/demo-store";
 import { WhatsAppSvg } from "@/components/WhatsAppFloat";
+import AlertBox from "@/components/izha/AlertBox";
 import {
   Flower,
   FlowerBadge,
@@ -93,14 +94,7 @@ function Field({
 }
 
 function ErrorBox({ text }: { text: string }) {
-  return (
-    <div
-      role="alert"
-      className="rounded-[10px] bg-[#F9E3E9] px-4 py-3 text-[14px] text-[#B20947]"
-    >
-      {text}
-    </div>
-  );
+  return <AlertBox variant="error" message={text} />;
 }
 
 /* =====================================================================
@@ -272,7 +266,7 @@ function SignedOut({
   return (
     /* Backdrop: click outside the box to close */
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-[#382B2B]/60 p-3 backdrop-blur-sm sm:p-4 md:items-center"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto overscroll-contain bg-[#382B2B]/60 p-3 backdrop-blur-sm sm:p-4 md:items-center"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -609,6 +603,7 @@ function ProfileCard({ user, setUser }: { user: AppUser; setUser: (u: AppUser) =
       <h2 className={`${serif} text-center text-[24px] font-medium text-[#332B2B]`}>Profile details</h2>
       <div className="mt-4 space-y-4">
         {error && <ErrorBox text={error} />}
+        {saved && <AlertBox variant="success" message="Your profile name has been updated." />}
         <Field label="Full name" value={name} onChange={setName} autoComplete="name" />
         <div>
           <span className="mb-1.5 block text-[13px] font-medium text-[#332B2B]">Email</span>

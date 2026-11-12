@@ -540,7 +540,7 @@ export default function NewArrivalsPage() {
       </div>
 
       {/* MOBILE: filter side drawer (modal) */}
-      <div className={`fixed inset-0 z-[80] lg:hidden ${drawer ? "visible" : "invisible"}`}>
+      <div className={`fixed inset-0 z-[80] lg:hidden ${drawer ? "visible" : "pointer-events-none invisible"}`}>
         <div
           onClick={() => setDrawer(false)}
           className={`absolute inset-0 bg-[#382B2B]/50 transition-opacity duration-300 ${
@@ -567,7 +567,7 @@ export default function NewArrivalsPage() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 pb-6">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6">
             <FilterBody filters={filters} setFilters={setFilters} />
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -52,6 +52,16 @@ export default function AdminShell({
 }) {
   const pathname = usePathname() ?? "/admin";
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Lock body scroll while mobile admin drawer is open
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -142,7 +152,7 @@ export default function AdminShell({
           onClick={() => setDrawerOpen(false)}
         >
           <aside
-            className="h-full w-[85vw] max-w-[288px] border-r border-black/10 bg-[#E99A9F] shadow-2xl"
+            className="h-full w-[85vw] max-w-[288px] overscroll-contain border-r border-black/10 bg-[#E99A9F] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarBody}
