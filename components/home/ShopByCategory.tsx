@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Cormorant_Garamond } from "next/font/google";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CATEGORIES, type Category } from "@/lib/categories";
+import { KEYS, useStored } from "@/lib/izha-store";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -20,7 +21,10 @@ type Props = {
   categories?: Category[];
 };
 
-export default function ShopByCategory({ categories = CATEGORIES }: Props) {
+export default function ShopByCategory({ categories: propCategories }: Props) {
+  const [storedCategories] = useStored<Category[]>(KEYS.categories, CATEGORIES);
+  const categories =
+    propCategories ?? (storedCategories.length > 0 ? storedCategories : CATEGORIES);
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
@@ -108,6 +112,7 @@ export default function ShopByCategory({ categories = CATEGORIES }: Props) {
                       alt={cat.name}
                       fill
                       priority={i < 5}
+                      unoptimized={cat.image.startsWith("data:")}
                       draggable={false}
                       sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 44vw"
                       className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"

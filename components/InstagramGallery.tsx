@@ -2,46 +2,14 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { KEYS, useStored } from "@/lib/izha-store";
+import { DEFAULT_INSTAGRAM_POSTS, type InstagramPost } from "@/lib/demo-store";
 
 /* ---- Easy settings ---- */
 
 const INSTAGRAM_HANDLE = "@izhablooms";
 
-/* Your real Instagram profile link, e.g. "https://www.instagram.com/your-handle/".
-   Left empty on purpose: the Follow Us button stays hidden until you add it. */
-const INSTAGRAM_PROFILE_URL = "";
-
-/* Exactly five photos. Replace each `image` with your own (put them in
-   public/images/instagram/). Add `postUrl` to link a card to its real Instagram post;
-   with no postUrl the card is not clickable. These are replaceable images,
-   not live Instagram posts. */
-const GALLERY = [
-  {
-    image: "/images/inst6.jpg",
-    alt: "Embroidered kurta in soft pastel shades",
-    postUrl: "",
-  },
-  {
-    image: "/images/inst2.jpg",
-    alt: "Close-up of intricate embroidery and fabric detail",
-    postUrl: "",
-  },
-  {
-    image: "/images/inst3.jpg",
-    alt: "Ethnic outfit styled for a festive occasion",
-    postUrl: "",
-  },
-  {
-    image: "/images/inst4.jpg",
-    alt: "Collection of women's ethnic wear in soft colours",
-    postUrl: "",
-  },
-  {
-    image: "/images/inst5.png",
-    alt: "Fashion product photography with floral styling",
-    postUrl: "",
-  },
-];
+const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/izhablooms/";
 
 /* Tilt and height of each card (same order as GALLERY).
    Change the rotate-* and lg:mt-* values to rearrange the collage. */
@@ -123,6 +91,7 @@ function Polaroid({
             src={image}
             alt={alt}
             fill
+            unoptimized={image.startsWith("data:")}
             sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 44vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none"
             onError={() => setFailed(true)}
@@ -166,6 +135,8 @@ function Polaroid({
 }
 
 export default function InstagramGallery() {
+  const [gallery] = useStored<InstagramPost[]>(KEYS.instagramPosts, DEFAULT_INSTAGRAM_POSTS);
+
   return (
     <section
       aria-labelledby="instagram-heading"
@@ -192,18 +163,26 @@ export default function InstagramGallery() {
             id="instagram-heading"
             className="mt-3 text-3xl font-semibold leading-tight text-[#382B2B] md:text-4xl lg:text-5xl"
           >
-            Find Us on Instagram
+            A Glimpse Into Our World
           </h2>
 
           <div className="mx-auto mt-5 h-px w-16 bg-[#E99A9F]" />
 
           <p className="mt-5 text-sm leading-relaxed text-[#382B2B]/80 md:text-base">
-            A little inspiration, a little elegance. Discover our latest styles and moments from
-            IZHA BLOOMS.
+            Discover the world of Izha Blooms — new collections, thoughtful details and everyday
+            moments of effortless elegance.
           </p>
 
-          <p className="mt-4 text-sm font-semibold tracking-[0.15em] text-[#9C555C]">
-            {INSTAGRAM_HANDLE}
+          <p className="mt-4">
+            <a
+              href={INSTAGRAM_PROFILE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-[0.15em] text-[#9C555C] underline underline-offset-4 transition-colors hover:text-[#B20947]"
+            >
+              <InstagramIcon size={16} />
+              {INSTAGRAM_HANDLE}
+            </a>
           </p>
 
           {INSTAGRAM_PROFILE_URL && (
@@ -226,12 +205,12 @@ export default function InstagramGallery() {
           className="mx-auto mt-14 flex max-w-[1400px] flex-wrap justify-center gap-x-5 gap-y-10 md:mt-16 lg:flex-nowrap lg:items-start lg:gap-x-0 lg:pb-10"
           aria-label="Instagram gallery"
         >
-          {GALLERY.map((item, i) => (
+          {gallery.map((item, i) => (
             <li
-              key={item.image}
-              className={`w-[44%] max-w-[260px] sm:w-[29%] lg:w-[21%] lg:max-w-none lg:-mx-2 ${LAYOUT[i]}`}
+              key={item.id ?? `${item.image}-${i}`}
+              className={`w-[44%] max-w-[260px] sm:w-[29%] lg:w-[21%] lg:max-w-none lg:-mx-2 ${LAYOUT[i % LAYOUT.length]}`}
             >
-              <Polaroid {...item} tape={TAPE[i]} />
+              <Polaroid key={`${item.id}-${item.image}`} {...item} tape={TAPE[i % TAPE.length]} />
             </li>
           ))}
         </ul>

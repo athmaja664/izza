@@ -46,6 +46,15 @@ export const KEYS = {
   user: "izha_user",
   token: "izha_token",
   addresses: "izha_addresses",
+  heroSlides: "izha_admin_hero_slides",
+  categories: "izha_admin_categories",
+  instagramPosts: "izha_admin_instagram_posts",
+  adminProducts: "izha_admin_products",
+  coupons: "izha_admin_coupons",
+  offers: "izha_admin_offers",
+  orders: "izha_admin_orders",
+  customers: "izha_admin_customers",
+  adminProfile: "izha_admin_profile",
 } as const;
 
 export const SIZES = ["XS", "S", "M", "L", "XL"];
@@ -59,7 +68,9 @@ export function useStored<T>(key: string, initial: T) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const read = () => {
+      if (!active) return;
       try {
         const raw = localStorage.getItem(key);
         setValue(raw ? (JSON.parse(raw) as T) : initial);
@@ -67,13 +78,19 @@ export function useStored<T>(key: string, initial: T) {
         setValue(initial);
       }
     };
-    read();
-    setReady(true);
+    queueMicrotask(() => {
+      if (!active) return;
+      read();
+      setReady(true);
+    });
     const onStorage = (e: StorageEvent) => {
       if (e.key === key) read();
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    return () => {
+      active = false;
+      window.removeEventListener("storage", onStorage);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 

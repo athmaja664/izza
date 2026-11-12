@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import PreLoader from "@/components/Preloader";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
+import StorefrontFrame from "@/components/StorefrontFrame";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,22 +13,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
   title: "Izha Blooms | Where Every Thread Blooms",
   description:
-    "Handcrafted embroidered kurtas and festive wear from Izha Blooms.",
+    "Handcrafted embroidered kurtas, dresses and contemporary ethnic wear from Izha Blooms.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} overflow-x-hidden antialiased`}
       >
-        <PreLoader />
-        <Navbar />
-        {children}
-        <Footer />
+        <StorefrontFrame>{children}</StorefrontFrame>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
+import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -19,7 +20,7 @@ const COLORS = {
   plum: "#8F3057", // small accents
   frame: "#E8B8C5", // pink outline around the arches
   frameBg: "#FFF5F7", // behind the images (shows if an image is missing)
-  line: "#E8CFD2", // thin dividers between the three points
+  line: "#E8CFD2", // thin dividers between the points
   button: "#FFFFFF", // button background
   buttonBorder: "#E99A9F", // button outline
   buttonText: "#B20947", // button text
@@ -32,24 +33,27 @@ const IMAGES = {
   small: { src: "/images/about2.png", alt: "Detail of handwork on an Izha Blooms kurta" },
 };
 
-/* Three short points. Edit the wording to match the real brand. */
 const POINTS = [
   {
-    title: "Designed in Aluva",
-    text: "Every style is planned and finished by our own team in Kerala.",
+    title: "Thoughtfully designed",
+    text: "Styles that bring together elegance, simplicity and contemporary charm.",
   },
   {
-    title: "Handwork you can feel",
-    text: "Soft rose shades and fine embroidery, made for festivals and everyday wear.",
+    title: "Comfort in every detail",
+    text: "Carefully considered silhouettes, fabrics and finishes for effortless everyday wear.",
   },
   {
-    title: "Sized for you",
-    text: "Clear size details on every product, so ordering is easy and returns are rare.",
+    title: "Crafted with character",
+    text: "From delicate prints to beautiful embroidery, discover details that make each piece special.",
+  },
+  {
+    title: "Made to feel like you",
+    text: "Versatile styles for everyday moments, celebrations and everything in between.",
   },
 ];
 
-/* WhatsApp number for the text link (country code, no + or spaces) */
-const WHATSAPP = "918281003090";
+/* Official WhatsApp business number (country code, no + or spaces) */
+const WHATSAPP = "919995757612";
 
 export default function AboutSection() {
   return (
@@ -105,8 +109,7 @@ export default function AboutSection() {
             className={`${cormorant.className} text-4xl font-medium leading-[1.1] md:text-5xl`}
             style={{ color: COLORS.ink }}
           >
-            Clothes made to bloom
-            <br className="hidden md:block" /> with you
+            Clothes that bloom with you.
           </h2>
 
           <div
@@ -115,26 +118,34 @@ export default function AboutSection() {
             aria-hidden="true"
           />
 
-        <p
-  className={`${cormorant.className} mt-6 text-lg leading-relaxed md:text-xl`}
-  style={{ color: COLORS.body }}
->
-  Izha Designs began in Aluva with a simple idea: ladies’ wear should feel special without
-  feeling complicated.
-</p>
-<p
-  className={`${cormorant.className} mt-4 text-lg leading-relaxed md:text-xl`}
-  style={{ color: COLORS.body }}
->
-  Izha Blooms brings our kurtas, dresses and tops to women across Kerala.
-</p>
+          <p
+            className={`${cormorant.className} mt-6 text-lg leading-relaxed md:text-xl`}
+            style={{ color: COLORS.body }}
+          >
+            At Izha Blooms, we believe every woman deserves to feel beautiful, confident and
+            effortlessly herself.
+          </p>
+          <p
+            className={`${cormorant.className} mt-4 text-lg leading-relaxed md:text-xl`}
+            style={{ color: COLORS.body }}
+          >
+            Rooted in Aluva, Kerala, our journey began with a simple thought — to bring together
+            timeless elegance, thoughtful details and everyday comfort.
+          </p>
+          <p
+            className={`${cormorant.className} mt-4 text-lg leading-relaxed md:text-xl`}
+            style={{ color: COLORS.body }}
+          >
+            From graceful kurtas to thoughtfully designed dresses and contemporary ethnic wear,
+            every piece is chosen to make you feel special, without compromising on comfort.
+          </p>
 
-          {/* Three points, separated by thin lines */}
-          <ul className="mt-8 text-left">
+          {/* Four points, separated by thin lines */}
+          <ul className="mt-7 text-left">
             {POINTS.map((p) => (
               <li
                 key={p.title}
-                className="border-t py-4 last:border-b"
+                className="border-t py-3.5 last:border-b"
                 style={{ borderColor: COLORS.line }}
               >
                 <h3
@@ -150,16 +161,35 @@ export default function AboutSection() {
             ))}
           </ul>
 
+          <div className="mt-6 space-y-1 text-center md:text-left">
+            <p
+              className={`${cormorant.className} text-xl font-semibold italic`}
+              style={{ color: COLORS.plum }}
+            >
+              Izha Blooms — Where Every Thread Blooms.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: COLORS.body }}>
+              Discover a wardrobe that feels as beautiful as it looks.
+            </p>
+          </div>
+
           {/* Actions */}
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row md:justify-start">
-            
+          <div className="mt-7 flex flex-col items-center gap-4 sm:flex-row md:justify-start">
+            <Link
+              href="/collections"
+              className="inline-flex items-center justify-center rounded-[10px] border-[1.5px] border-[#E99A9F] bg-white px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#B20947] transition-colors hover:bg-[#FFF5F7]"
+            >
+              Explore Our Collections
+            </Link>
+
             <a
               href={`https://wa.me/${WHATSAPP}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm underline underline-offset-4 transition-colors hover:text-[#B20947]"
+              className="inline-flex items-center gap-2 text-sm underline underline-offset-4 transition-colors hover:text-[#B20947]"
               style={{ color: COLORS.ink }}
             >
+              <WhatsAppSvg size={24} />
               Chat with us on WhatsApp
             </a>
           </div>

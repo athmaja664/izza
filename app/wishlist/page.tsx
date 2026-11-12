@@ -1,219 +1,427 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { ArrowLeft, Heart, Minus, Plus, ShieldCheck, Trash2, Truck } from "lucide-react";
 import {
   KEYS,
-  SIZES,
   inr,
   useStored,
   type CartItem,
   type WishItem,
 } from "@/lib/izha-store";
+import { PRODUCTS } from "@/lib/products";
+import { CatalogProductCard } from "@/components/CollectionCatalog";
+import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 import {
   EmptyBlock,
+  FlowerBadge,
   PageTitle,
   PageShell,
+  card,
   cardCream,
   focusRing,
   outlineBtn,
   serif,
+  solidBtn,
 } from "@/components/izha/ui";
 
-export default function WishlistPage() {
-  const [wish, setWish, ready] = useStored<WishItem[]>(KEYS.wish, []);
-  const [, setCart] = useStored<CartItem[]>(KEYS.cart, []);
-  const [picked, setPicked] = useState<Record<string, string>>({});
-  const [needSize, setNeedSize] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+export default function CartPage() {
+  const [cart, setCart, ready] = useStored<CartItem[]>(KEYS.cart, []);
+  const [wish, setWish] = useStored<WishItem[]>(KEYS.wish, []);
 
-  const remove = (id: string) => setWish((w) => w.filter((x) => x.id !== id));
-
-  const addToCart = (p: WishItem) => {
-    const size = picked[p.id];
-    if (!size) {
-      setNeedSize(p.id);
-      return;
+  const { subtotal, savings, count } = useMemo(() => {
+    let subtotal = 0;
+    let savings = 0;
+    let count = 0;
+    for (const i of cart) {
+      subtotal += i.price * i.qty;
+      count += i.qty;
+      if (i.oldPrice && i.oldPrice > i.price)
+        savings += (i.oldPrice - i.price) * i.qty;
     }
-    setNeedSize(null);
-    setCart((c) => {
-      const i = c.findIndex((x) => x.id === p.id && x.size === size);
-      if (i >= 0) {
-        const next = [...c];
-        next[i] = { ...next[i], qty: Math.min(10, next[i].qty + 1) };
-        return next;
-      }
-      return [
-        ...c,
-        {
-          id: p.id,
-          name: p.name,
-          image: p.image,
-          size,
-          price: p.price,
-          oldPrice: p.oldPrice,
-          qty: 1,
-        },
-      ];
-    });
-    setDone(p.id);
-    setTimeout(() => setDone((d) => (d === p.id ? null : d)), 1600);
+    return { subtotal, savings, count };
+  }, [cart]);
+
+  const recommendations = useMemo(() => {
+    const inCartIds = new Set(cart.map((c) => c.id));
+    return PRODUCTS.filter((p) => !inCartIds.has(p.id)).slice(0, 4);
+  }, [cart]);
+
+  // Products saved in the wishlist (shown when the cart is empty)
+  const wishlistProducts = useMemo(() => {
+    const wishIds = new Set(wish.map((w) => w.id));
+    return PRODUCTS.filter((p) => wishIds.has(p.id)).slice(0, 4);
+  }, [wish]);
+
+  const isLiked = (id: string) => wish.some((x) => x.id === id);
+
+  const toggleWish = (p: (typeof PRODUCTS)[number]) => {
+    setWish((list) =>
+      list.some((x) => x.id === p.id)
+        ? list.filter((x) => x.id !== p.id)
+        : [
+            ...list,
+            {
+              id: p.id,
+              name: p.name,
+              image: p.image,
+              price: p.price,
+              oldPrice: p.mrp,
+              soldOutSizes: p.soldOutSizes,
+            },
+          ]
+    );
+  };
+
+  const changeQty = (id: string, size: string, delta: number) =>
+    setCart((items) =>
+      items.map((i) =>
+        i.id === id && i.size === size
+          ? { ...i, qty: Math.min(10, Math.max(1, i.qty + delta)) }
+          : i
+      )
+    );
+
+  const remove = (id: string, size: string) =>
+    setCart((items) => items.filter((i) => !(i.id === id && i.size === size)));
+
+  const moveToWishlist = (item: CartItem) => {
+    setWish((w) =>
+      w.some((x) => x.id === item.id)
+        ? w
+        : [
+            ...w,
+            {
+              id: item.id,
+              name: item.name,
+              image: item.image,
+              price: item.price,
+              oldPrice: item.oldPrice,
+            },
+          ]
+    );
+    remove(item.id, item.size);
   };
 
   return (
     <PageShell>
       <PageTitle
-        title="Wishlist"
+        title="Your Shopping Bag"
         sub={
-          ready && wish.length > 0
-            ? `${wish.length} ${wish.length === 1 ? "piece" : "pieces"} saved`
-            : undefined
+          ready && count > 0
+            ? `Your favourites, one step closer to you. · ${count} ${count === 1 ? "piece" : "pieces"}`
+            : "Your favourites, one step closer to you."
         }
       />
 
-      {ready && wish.length === 0 && (
-        <EmptyBlock text="Your wishlist is empty" href="/shop" action="Discover more" />
+      {ready && cart.length === 0 && (
+        <EmptyBlock
+          text="Your shopping bag is currently empty"
+          href="/shop"
+          action="Continue Shopping"
+        />
       )}
 
-      {ready && wish.length > 0 && (
-        <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {wish.map((p) => {
-            const inStock = p.inStock !== false;
-            const off =
-              p.oldPrice && p.oldPrice > p.price
-                ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)
-                : 0;
-            return (
-              <li key={p.id} className={`${cardCream} flex flex-col p-2`}>
-                {/* arch photo with white inner frame */}
-                <div className="rounded-t-full rounded-b-xl border border-[#E8B8C5] bg-white p-1.5">
-                  <div className="group relative aspect-[3/4] overflow-hidden rounded-t-full rounded-b-lg bg-[#FFF5F7]">
-                    <Image
-                      src={p.image}
-                      alt={p.name}
-                      fill
-                      sizes="(min-width:1024px) 250px, 45vw"
-                      quality={75}
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <button
-                      onClick={() => remove(p.id)}
-                      aria-label={`Remove ${p.name} from wishlist`}
-                      className={`absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white ${focusRing}`}
-                    >
-                      <Heart
-                        size={18}
-                        strokeWidth={1.6}
-                        className="fill-[#E99A9F] text-[#E99A9F]"
+      {/* Wishlist picks, only when the bag is empty */}
+      {ready && cart.length === 0 && wishlistProducts.length > 0 && (
+        <section
+          aria-labelledby="bag-wishlist-heading"
+          className="mt-12 border-t border-[#E8CFD2] pt-12"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#B5607A]">
+                Saved By You
+              </p>
+              <h2
+                id="bag-wishlist-heading"
+                className={`${serif} mt-1 text-[28px] font-medium text-[#332B2B] sm:text-[34px]`}
+              >
+                From Your Wishlist
+              </h2>
+            </div>
+            <Link
+              href="/wishlist"
+              className="text-[13px] font-medium text-[#B20947] underline underline-offset-4"
+            >
+              View Wishlist
+            </Link>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {wishlistProducts.map((p) => (
+              <CatalogProductCard
+                key={p.id}
+                p={p}
+                liked={isLiked(p.id)}
+                onLike={() => toggleWish(p)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {ready && cart.length > 0 && (
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Link
+                href="/shop"
+                className={`inline-flex items-center gap-1.5 text-[13px] font-medium text-[#B20947] underline-offset-4 hover:underline ${focusRing}`}
+              >
+                <ArrowLeft size={15} />
+                Continue Shopping
+              </Link>
+              <span className="text-[13px] text-[#6f6565]">
+                Free doorstep shipping in Kerala · Pan-India delivery available
+              </span>
+            </div>
+
+            <ul className="space-y-4">
+              {cart.map((item) => (
+                <li
+                  key={`${item.id}-${item.size}`}
+                  className={`${card} flex gap-4 p-3 sm:p-4`}
+                >
+                  {/* arch photo frame */}
+                  <Link
+                    href={`/product/${item.id}`}
+                    className="h-36 w-28 shrink-0 rounded-t-full rounded-b-xl border border-[#E8B8C5] bg-white p-1 sm:h-44 sm:w-32"
+                  >
+                    <div className="relative h-full w-full overflow-hidden rounded-t-full rounded-b-lg bg-[#FFF5F7]">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="128px"
+                        quality={75}
+                        className="object-cover"
                       />
-                    </button>
-                  </div>
-                </div>
+                    </div>
+                  </Link>
 
-                <div className="flex flex-1 flex-col px-1 pb-1 pt-3">
-                  <h3
-                    className={`${serif} line-clamp-2 text-[17px] font-medium leading-snug text-[#332B2B]`}
-                  >
-                    {p.name}
-                  </h3>
-
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span
-                      className={`${serif} text-[17px] font-semibold text-[#332B2B]`}
-                    >
-                      {inr(p.price)}
-                    </span>
-                    {off > 0 && (
-                      <>
-                        <span className="text-[12px] text-[#9b9090] line-through">
-                          {inr(p.oldPrice!)}
-                        </span>
-                        <span className="rounded bg-[#F9E3E9] px-1.5 py-0.5 text-[10px] font-semibold text-[#B5607A]">
-                          {off}% OFF
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* size boxes */}
-                  <div
-                    className="mt-3 grid grid-cols-5 gap-1"
-                    role="group"
-                    aria-label={`Sizes for ${p.name}`}
-                  >
-                    {SIZES.map((s) => {
-                      const soldOut = !inStock || p.soldOutSizes?.includes(s);
-                      const on = picked[p.id] === s;
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          disabled={soldOut}
-                          aria-pressed={on}
-                          onClick={() => {
-                            setPicked((m) => ({ ...m, [p.id]: s }));
-                            setNeedSize(null);
-                          }}
-                          className={`relative overflow-hidden rounded-md border py-1.5 text-[11px] font-medium ${focusRing} ${
-                            soldOut
-                              ? "cursor-not-allowed border-[#E8CFD2] bg-white text-[#b3a9ab]"
-                              : on
-                              ? "border-[#E99A9F] bg-[#E99A9F] text-white"
-                              : "border-[#E8B8C5] bg-white text-[#332B2B]"
-                          }`}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/product/${item.id}`}
+                          className={`${serif} line-clamp-2 text-[20px] font-medium leading-snug text-[#332B2B] hover:text-[#B20947]`}
                         >
-                          {s}
-                          {soldOut && (
-                            <span className="absolute left-0 right-0 top-1/2 h-px -rotate-[30deg] bg-[#b3a9ab]" />
-                          )}
+                          {item.name}
+                        </Link>
+                        <p className="mt-1 text-[13px] text-[#6f6565]">
+                          Size {item.size}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => remove(item.id, item.size)}
+                        aria-label={`Remove ${item.name} from shopping bag`}
+                        className={`rounded-full p-2 text-[#6f6565] hover:bg-[#FFF5F7] hover:text-[#B20947] ${focusRing}`}
+                      >
+                        <Trash2 size={18} strokeWidth={1.6} />
+                      </button>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                      <span
+                        className={`${serif} text-[20px] font-semibold text-[#332B2B]`}
+                      >
+                        {inr(item.price)}
+                      </span>
+                      {item.oldPrice && item.oldPrice > item.price && (
+                        <>
+                          <span className="text-[12px] text-[#9b9090] line-through">
+                            {inr(item.oldPrice)}
+                          </span>
+                          <span className="rounded bg-[#F9E3E9] px-1.5 py-0.5 text-[10px] font-semibold text-[#B5607A]">
+                            {Math.round(
+                              ((item.oldPrice - item.price) / item.oldPrice) * 100
+                            )}
+                            % OFF
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
+                      <div
+                        className="flex items-center gap-3"
+                        role="group"
+                        aria-label={`Quantity for ${item.name}`}
+                      >
+                        <button
+                          onClick={() => changeQty(item.id, item.size, -1)}
+                          disabled={item.qty <= 1}
+                          aria-label="Decrease quantity"
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] border-[#E99A9F] bg-white text-[#332B2B] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] ${focusRing}`}
+                        >
+                          <Minus size={16} strokeWidth={1.8} />
                         </button>
-                      );
-                    })}
+                        <span className="min-w-[1.5rem] text-center text-[15px] font-medium text-[#332B2B]">
+                          {item.qty}
+                        </span>
+                        <button
+                          onClick={() => changeQty(item.id, item.size, 1)}
+                          disabled={item.qty >= 10}
+                          aria-label="Increase quantity"
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] border-[#E99A9F] bg-white text-[#332B2B] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] ${focusRing}`}
+                        >
+                          <Plus size={16} strokeWidth={1.8} />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => moveToWishlist(item)}
+                        className={`inline-flex items-center gap-1.5 rounded text-[13px] text-[#B20947] underline-offset-4 hover:underline ${focusRing}`}
+                      >
+                        <Heart size={15} strokeWidth={1.7} />
+                        Move to wishlist
+                      </button>
+                    </div>
                   </div>
+                </li>
+              ))}
+            </ul>
 
-                  <p
-                    className={`mt-2 text-[12px] ${
-                      inStock ? "text-[#5f7a62]" : "font-medium text-[#b04a4a]"
-                    }`}
-                  >
-                    {inStock ? "In stock" : "OUT OF STOCK"}
+            {/* Helpful shipping & trust card */}
+            <div className={`${cardCream} grid gap-4 p-4 sm:grid-cols-2 sm:p-5`}>
+              <div className="flex items-start gap-3">
+                <Truck size={20} className="mt-0.5 shrink-0 text-[#B20947]" />
+                <div>
+                  <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-[#332B2B]">
+                    Pan-India Delivery
                   </p>
-
-                  <p
-                    aria-live="polite"
-                    className="min-h-[16px] text-[11px] text-[#B20947]"
-                  >
-                    {needSize === p.id ? "Pick a size to continue." : ""}
+                  <p className="mt-0.5 text-[12px] text-[#6f6565]">
+                    Check your PIN code &amp; apply coupon codes cleanly on the next step.
                   </p>
-
-                  {/* Add to Cart: white background, pink outline, #B20947 text */}
-                  <button
-                    type="button"
-                    onClick={() => addToCart(p)}
-                    disabled={!inStock}
-                    className={`${outlineBtn} mt-auto w-full !px-1 sm:!px-2`}
-                  >
-                    {!inStock
-                      ? "Out of Stock"
-                      : done === p.id
-                      ? "Added to Cart"
-                      : "Add to Cart"}
-                  </button>
                 </div>
-              </li>
-            );
-          })}
-        </ul>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#B20947]" />
+                <div>
+                  <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-[#332B2B]">
+                    Guest Checkout Available
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-[#6f6565]">
+                    Complete your order as a guest, or sign in with your mobile OTP.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order summary with flower badge on the top edge */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className={`${card} relative px-5 pb-6 pt-9 sm:px-6`}>
+              <FlowerBadge />
+              <h2
+                className={`${serif} text-center text-[26px] font-medium text-[#332B2B]`}
+              >
+                Order Summary
+              </h2>
+              <span className="mx-auto mt-2 block h-[2px] w-14 bg-[#E8B8C5]" />
+
+              <dl className="mt-6 space-y-3 text-[15px]">
+                <div className="flex justify-between">
+                  <dt className="text-[#6f6565]">
+                    Subtotal ({count} {count === 1 ? "item" : "items"})
+                  </dt>
+                  <dd className="font-medium text-[#332B2B]">
+                    {inr(subtotal)}
+                  </dd>
+                </div>
+                {savings > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#6f6565]">Product Savings</dt>
+                    <dd className="font-medium text-[#5f7a62]">
+                      {inr(savings)}
+                    </dd>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <dt className="text-[#6f6565]">Shipping &amp; Coupons</dt>
+                  <dd className="text-[#6f6565]">Calculated at checkout</dd>
+                </div>
+                <div className="flex items-baseline justify-between border-t border-[#E8CFD2] pt-4">
+                  <dt
+                    className={`${serif} text-[22px] font-semibold text-[#332B2B]`}
+                  >
+                    Estimated Total
+                  </dt>
+                  <dd
+                    className={`${serif} text-[26px] font-semibold text-[#332B2B]`}
+                  >
+                    {inr(subtotal)}
+                  </dd>
+                </div>
+              </dl>
+
+              <Link href="/checkout" className={`${solidBtn} mt-6 w-full`}>
+                Proceed to Checkout
+              </Link>
+              <Link href="/shop" className={`${outlineBtn} mt-3 w-full`}>
+                Continue Shopping
+              </Link>
+              <Link href="/wishlist" className={`${outlineBtn} mt-2.5 w-full`}>
+                View Wishlist
+              </Link>
+
+              <p className="mt-5 text-center text-[13px] text-[#6f6565]">
+                Not sure about a size?{" "}
+                <a
+                  href="https://wa.me/919995757612"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-1.5 text-[#B20947] underline underline-offset-4 ${focusRing}`}
+                >
+                  <WhatsAppSvg size={14} />
+                  Chat with us on WhatsApp
+                </a>
+              </p>
+            </div>
+          </aside>
+        </div>
       )}
 
-      {ready && wish.length > 0 && (
-        <div className="mt-12 text-center">
-          <Link href="/addtocart" className={`${outlineBtn} px-8`}>
-            Go to Cart
-          </Link>
-        </div>
+      {/* Product Recommendations */}
+      {recommendations.length > 0 && (
+        <section
+          aria-labelledby="bag-recs-heading"
+          className="mt-16 border-t border-[#E8CFD2] pt-12"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#B5607A]">
+                Curated For You
+              </p>
+              <h2
+                id="bag-recs-heading"
+                className={`${serif} mt-1 text-[28px] font-medium text-[#332B2B] sm:text-[34px]`}
+              >
+                You May Also Love
+              </h2>
+            </div>
+            <Link
+              href="/collections"
+              className="text-[13px] font-medium text-[#B20947] underline underline-offset-4"
+            >
+              Explore Collections
+            </Link>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {recommendations.map((p) => (
+              <CatalogProductCard
+                key={p.id}
+                p={p}
+                liked={isLiked(p.id)}
+                onLike={() => toggleWish(p)}
+              />
+            ))}
+          </div>
+        </section>
       )}
     </PageShell>
   );

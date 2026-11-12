@@ -1,34 +1,34 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Phone, Truck, ShieldCheck, MessageCircle, PackageCheck } from "lucide-react";
+import { Mail, MapPin, Phone, Truck, ShieldCheck, MessageCircle, PackageCheck } from "lucide-react";
 
 /* ---- Easy settings ---- */
 
 const BRAND = "IZHA BLOOMS";
-const BUSINESS_NAME = "IZHA DESIGNS";
+const BUSINESS_NAME = "Empire Ae It Services";
 const TAGLINE =
-  "Handcrafted embroidered kurtas and festive wear for women, made for your most beautiful moments.";
+  "Where Every Thread Blooms. Thoughtfully curated women's wear that brings together timeless elegance, effortless comfort and distinctive details. Designed with care in Kerala, for women who love to express themselves through style.";
 
-const PHONE_DISPLAY = "+91 82810 03090";
-const PHONE_DIGITS = "918281003090"; // country code + number, no spaces or +
-const LOCATION = "Aluva, Kerala";
+const PHONE_DISPLAY = "+91 99957 57612";
+const PHONE_DIGITS = "919995757612";
+const EMAIL_ADDRESS = "izhablooms@gmail.com";
+const LOCATION = "Aluva, Kerala, India";
 
-/* Add your real Instagram link, e.g. "https://www.instagram.com/your-handle/".
-   Left empty on purpose: the Instagram icon stays hidden until you add it. */
-const INSTAGRAM_URL = "";
+const INSTAGRAM_URL = "https://www.instagram.com/izhablooms/";
+const FACEBOOK_URL = "https://www.facebook.com/izhablooms/";
 
 const WHATSAPP_URL = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
-  "Hi, I would like to know more about your collection."
+  "Hi IZHA BLOOMS, I would like personal assistance with your collection."
 )}`;
 
 const TRUST = [
-  { icon: Truck, title: "Delivery Across Kerala", text: "Check availability by pincode" },
+  { icon: Truck, title: "Delivery Across India", text: "Delivered to your doorstep." },
   { icon: ShieldCheck, title: "Secure Payments", text: "Safe and simple checkout" },
-  { icon: PackageCheck, title: "Order Updates", text: "Confirmation and tracking alerts" },
-  { icon: MessageCircle, title: "WhatsApp Support", text: "Ask us about any product" },
+  { icon: PackageCheck, title: "Order Tracking", text: "Stay updated at every step." },
+  { icon: MessageCircle, title: "Personal Assistance", text: "We're just a WhatsApp message away." },
 ];
 
-const SHOP_LINKS = [
+const EXPLORE_LINKS = [
   { label: "New Arrivals", href: "/new-arrivals" },
   { label: "Dresses", href: "/collections/dresses" },
   { label: "Kurtas", href: "/collections/kurtas" },
@@ -38,18 +38,19 @@ const SHOP_LINKS = [
   { label: "All Products", href: "/shop" },
 ];
 
-const CARE_LINKS = [
-  { label: "My Account", href: "/account" },
-  { label: "Order History", href: "/account" },
+const ACCOUNT_LINKS = [
+  { label: "My Profile", href: "/account" },
+  { label: "My Orders", href: "/account?tab=orders" },
   { label: "Wishlist", href: "/wishlist" },
-  { label: "Cart", href: "/addtocart" },
+  { label: "Shopping Bag", href: "/addtocart" },
   { label: "Track Your Order", href: "/track-order" },
-  { label: "Contact Us", href: "/contact" },
+  { label: "Admin Panel (Demo)", href: "/admin" },
 ];
 
-const INFO_LINKS = [
-  { label: "About Us", href: "/about" },
-  { label: "Journal", href: "/journal" },
+const CUSTOMER_CARE_LINKS = [
+  { label: "About Us", href: "/#about" },
+  { label: "Size Guide", href: "/size-guide" },
+  { label: "FAQs", href: "/faqs" },
   { label: "Shipping & Delivery", href: "/shipping-policy" },
   { label: "Returns & Exchange", href: "/returns" },
   { label: "Privacy Policy", href: "/privacy-policy" },
@@ -74,6 +75,24 @@ function InstagramIcon() {
       <rect x="3" y="3" width="18" height="18" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
     </svg>
   );
 }
@@ -152,27 +171,36 @@ export default function Footer() {
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#F3E7D3]/75">{TAGLINE}</p>
 
-            {INSTAGRAM_URL && (
+            <div className="mt-5 flex items-center gap-3">
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Follow us on Instagram"
-                className="mt-5 flex size-11 items-center justify-center rounded-full border border-white/25 text-[#F3E7D3] transition-colors duration-300 hover:border-[#E99A9F] hover:bg-[#E99A9F] hover:text-[#382B2B]"
+                aria-label="Follow Izha Blooms on Instagram"
+                className="flex size-11 items-center justify-center rounded-full border border-white/25 text-[#F3E7D3] transition-colors duration-300 hover:border-[#E99A9F] hover:bg-[#E99A9F] hover:text-[#382B2B]"
               >
                 <InstagramIcon />
               </a>
-            )}
+              <a
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow Izha Blooms on Facebook"
+                className="flex size-11 items-center justify-center rounded-full border border-white/25 text-[#F3E7D3] transition-colors duration-300 hover:border-[#E99A9F] hover:bg-[#E99A9F] hover:text-[#382B2B]"
+              >
+                <FacebookIcon />
+              </a>
+            </div>
           </div>
 
-          <LinkColumn title="Shop" links={SHOP_LINKS} />
-          <LinkColumn title="My Account" links={CARE_LINKS} />
-          <LinkColumn title="Information" links={INFO_LINKS} />
+          <LinkColumn title="Explore" links={EXPLORE_LINKS} />
+          <LinkColumn title="My Account" links={ACCOUNT_LINKS} />
+          <LinkColumn title="Customer Care" links={CUSTOMER_CARE_LINKS} />
 
           {/* Contact */}
           <div className="col-span-2 lg:col-span-1">
             <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-[#E99A9F]">
-              Contact Us
+              Get in Touch
             </h3>
 
             <ul className="mt-5 space-y-4">
@@ -183,6 +211,15 @@ export default function Footer() {
                 >
                   <Phone size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[#E99A9F]" />
                   {PHONE_DISPLAY}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${EMAIL_ADDRESS}`}
+                  className="flex items-start gap-3 text-sm text-[#F3E7D3]/85 transition-colors hover:text-[#E99A9F]"
+                >
+                  <Mail size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[#E99A9F]" />
+                  {EMAIL_ADDRESS}
                 </a>
               </li>
               <li className="flex items-start gap-3 text-sm text-[#F3E7D3]/85">

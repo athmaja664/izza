@@ -1,19 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Check,
   Heart,
-  MessageCircle,
   Minus,
   Plus,
+  Ruler,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
   Truck,
+  X,
 } from "lucide-react";
 import {
   KEYS,
@@ -28,7 +29,13 @@ import {
   type Product,
   type ProductReview,
 } from "@/lib/products";
+import {
+  ALL_CLOTH_SIZES,
+  DEFAULT_ADMIN_PRODUCTS,
+  type AdminProduct,
+} from "@/lib/demo-store";
 import { CatalogProductCard } from "@/components/CollectionCatalog";
+import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 import {
   EmptyBlock,
   PageShell,
@@ -41,7 +48,15 @@ import {
   solidBtn,
 } from "@/components/izha/ui";
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const SIZE_CHART_ROWS = [
+  { size: "XS", bust: '32"', waist: '26"', hip: '35"', uk: "6" },
+  { size: "S", bust: '34"', waist: '28"', hip: '37"', uk: "8" },
+  { size: "M", bust: '36"', waist: '30"', hip: '39"', uk: "10" },
+  { size: "L", bust: '38"', waist: '32"', hip: '41"', uk: "12" },
+  { size: "XL", bust: '40"', waist: '34"', hip: '43"', uk: "14" },
+  { size: "XXL", bust: '42"', waist: '36"', hip: '45"', uk: "16" },
+  { size: "XXXL", bust: '44"', waist: '38"', hip: '47"', uk: "18" },
+];
 
 const SLASH =
   "linear-gradient(to top right, transparent calc(50% - 0.6px), #8f8588 calc(50% - 0.6px), #8f8588 calc(50% + 0.6px), transparent calc(50% + 0.6px))";
@@ -81,7 +96,12 @@ export default function ProductDetailView({
 }: {
   productId: string;
 }) {
-  const product = getProductById(productId);
+  const [adminProducts] = useStored<AdminProduct[]>(
+    KEYS.adminProducts,
+    DEFAULT_ADMIN_PRODUCTS
+  );
+  const product =
+    adminProducts.find((p) => p.id === productId) ?? getProductById(productId);
 
   if (!product) {
     return (
@@ -100,14 +120,27 @@ export default function ProductDetailView({
   return <ProductDetailContent product={product} />;
 }
 
-function ProductDetailContent({ product }: { product: Product }) {
+function ProductDetailContent({ product }: { product: Product | AdminProduct }) {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [qty, setQty] = useState(1);
   const [feedback, setFeedback] = useState<{
     type: "error" | "success";
     text: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (!sizeGuideOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSizeGuideOpen(false);
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [sizeGuideOpen]);
 
   const [cart, setCart] = useStored<CartItem[]>(KEYS.cart, []);
   const [wish, setWish] = useStored<WishItem[]>(KEYS.wish, []);
@@ -200,7 +233,7 @@ function ProductDetailContent({ product }: { product: Product }) {
 
     setFeedback({
       type: "success",
-      text: `Added ${product.name} (${selectedSize}) to your cart.`,
+      text: `${product.name} (Size ${selectedSize}) has been added to your bag.`,
     });
   };
 
@@ -235,10 +268,20 @@ function ProductDetailContent({ product }: { product: Product }) {
   const whatsappInquiryUrl =
     "https://wa.me/919995757612?text=" +
     encodeURIComponent(
-      `Hi IZHA BLOOMS, I have a question about "${product.name}" (${inr(
-        product.price
-      )}).`
+      `Hi IZHA BLOOMS, I would like to enquire about "${product.name}"${
+        selectedSize ? ` (Size ${selectedSize})` : ""
+      } (${inr(product.price)}).`
     );
+
+  const colorLabel = "color" in product ? product.color : undefined;
+  const stockCount = "stock" in product ? product.stock : 15;
+  const displaySizes = useMemo(() => {
+    const merged = [...ALL_CLOTH_SIZES] as string[];
+    for (const s of product.sizes) {
+      if (!merged.includes(s)) merged.push(s);
+    }
+    return merged;
+  }, [product.sizes]);
 
   const inCartCount = cart
     .filter((i) => i.id === product.id)
@@ -396,12 +439,46 @@ function ProductDetailContent({ product }: { product: Product }) {
             {product.description}
           </p>
 
+          {/* Color & stock */}
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px]">
+            {colorLabel && (
+              <span className="rounded-full border border-[#E8B8C5] bg-white px-3 py-1 text-[#332B2B]">
+                Shade: <strong>{colorLabel}</strong>
+              </span>
+            )}
+            <span
+              className={`rounded-full px-3 py-1 font-medium ${
+                stockCount === 0
+                  ? "bg-[#F9E3E9] text-[#B20947]"
+                  : stockCount <= 5
+                  ? "bg-[#FFF5F7] text-[#B20947]"
+                  : "bg-[#f0f7f1] text-[#3f6a46]"
+              }`}
+            >
+              {stockCount === 0
+                ? "Out of Stock"
+                : stockCount <= 5
+                ? `Only ${stockCount} left in stock`
+                : "In Stock · Ready to Ship"}
+            </span>
+          </div>
+
           {/* Size selection */}
           <div className="mt-6">
-            <div className="flex items-center justify-between">
-              <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#332B2B]">
-                Select Size
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#332B2B]">
+                  Select Size
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSizeGuideOpen(true)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border border-[#E8B8C5] bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-[#B20947] transition-colors hover:bg-[#FFF5F7] ${focusRing}`}
+                >
+                  <Ruler size={13} strokeWidth={1.8} />
+                  Size Guide
+                </button>
+              </div>
               {selectedSize && (
                 <span className="text-[12px] font-medium text-[#B20947]">
                   Selected: {selectedSize}
@@ -409,9 +486,12 @@ function ProductDetailContent({ product }: { product: Product }) {
               )}
             </div>
 
-            <div className="mt-3 grid grid-cols-6 gap-2 sm:max-w-sm">
-              {ALL_SIZES.map((s) => {
-                const available = product.sizes.includes(s);
+            <div className="mt-3 grid grid-cols-4 gap-2 sm:max-w-md sm:grid-cols-7">
+              {displaySizes.map((s) => {
+                const available =
+                  stockCount > 0 &&
+                  product.sizes.includes(s) &&
+                  !(product.soldOutSizes ?? []).includes(s);
                 const active = selectedSize === s;
                 return (
                   <button
@@ -561,12 +641,96 @@ function ProductDetailContent({ product }: { product: Product }) {
               rel="noopener noreferrer"
               className="mt-4 inline-flex items-center gap-2 text-[13px] font-medium text-[#B20947] hover:underline"
             >
-              <MessageCircle size={16} />
-              Need sizing or styling help? Ask us on WhatsApp
+              <WhatsAppSvg size={16} />
+              Enquire about &ldquo;{product.name}&rdquo; on WhatsApp
             </a>
           </div>
         </div>
       </section>
+
+      {/* Size Guide Modal */}
+      {sizeGuideOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#382B2B]/55 p-3 backdrop-blur-sm sm:p-5"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setSizeGuideOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="size-guide-modal-title"
+            className={`${card} relative max-h-[90vh] w-full max-w-xl overflow-y-auto p-5 shadow-2xl sm:p-7`}
+          >
+            <button
+              type="button"
+              onClick={() => setSizeGuideOpen(false)}
+              aria-label="Close size guide"
+              className={`absolute right-3 top-3 rounded-full p-2 text-[#332B2B] hover:bg-[#FFF5F7] hover:text-[#B20947] ${focusRing}`}
+            >
+              <X size={20} />
+            </button>
+
+            <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#B5607A]">
+              Izha Blooms Fit Guide
+            </p>
+            <h2
+              id="size-guide-modal-title"
+              className={`${serif} mt-1 text-[28px] font-medium text-[#332B2B]`}
+            >
+              Women&apos;s Size Chart
+            </h2>
+            <span className="mt-2 block h-[2px] w-12 bg-[#E8B8C5]" />
+            <p className="mt-3 text-[13px] text-[#6f6565]">
+              All measurements below are garment body measurements in inches. If you fall between two sizes, we recommend choosing the larger size for comfortable everyday ease.
+            </p>
+
+            <div className="mt-4 overflow-x-auto rounded-xl border border-[#E8CFD2]">
+              <table className="w-full min-w-[360px] text-left text-[13px]">
+                <thead className="bg-[#FFF5F7] text-[11px] uppercase tracking-[0.14em] text-[#B20947]">
+                  <tr>
+                    <th className="px-3.5 py-2.5">Size</th>
+                    <th className="px-3.5 py-2.5">Bust</th>
+                    <th className="px-3.5 py-2.5">Waist</th>
+                    <th className="px-3.5 py-2.5">Hip</th>
+                    <th className="px-3.5 py-2.5">UK</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E8CFD2] bg-white text-[#332B2B]">
+                  {SIZE_CHART_ROWS.map((row) => (
+                    <tr key={row.size} className="hover:bg-[#FCF8F3]">
+                      <td className="px-3.5 py-2.5 font-semibold">{row.size}</td>
+                      <td className="px-3.5 py-2.5">{row.bust}</td>
+                      <td className="px-3.5 py-2.5">{row.waist}</td>
+                      <td className="px-3.5 py-2.5">{row.hip}</td>
+                      <td className="px-3.5 py-2.5">{row.uk}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <Link
+                href="/size-guide"
+                onClick={() => setSizeGuideOpen(false)}
+                className="text-[13px] font-medium text-[#B20947] underline underline-offset-4"
+              >
+                Open full Size Guide page
+              </Link>
+              <a
+                href={whatsappInquiryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${outlineBtn} gap-2`}
+              >
+                <WhatsAppSvg size={15} />
+                Ask Size Help on WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Customer Reviews Section */}
       <section

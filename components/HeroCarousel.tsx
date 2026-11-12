@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { KEYS, useStored } from "@/lib/izha-store";
+import { DEFAULT_HERO_SLIDES, type HeroSlide } from "@/lib/demo-store";
 
 const AUTOPLAY_MS = 5000;
 
@@ -18,68 +20,15 @@ const BUTTON = {
   hoverBg: "#FFF5F7", // light pink on hover
 };
 
-/*
-  Each slide = one banner image + text shown on the LEFT side of it.
-  imagePosition "right center" keeps the right side (the lady) and cuts
-  the extra plain area from the LEFT. Use "center" to cut both sides equally.
-  textColor / accentColor: change these per slide so the text is readable.
-  The <br className="sm:hidden" /> in titles only breaks the line on mobile.
-*/
-const SLIDES = [
-  {
-    image: "/images/hero5.png",
-    imageAlt: "Izha Blooms new festive collection",
-    imagePosition: "right center",
-    eyebrow: "New Festive Collection",
-    title: (
-      <>
-        Where Every <br className="sm:hidden" />
-        Thread Blooms
-      </>
-    ),
-    text: "Handcrafted embroidered kurtas in soft rose shades, made for your most beautiful moments.",
-    cta: "Shop Now",
-    href: "/shop",
-    textColor: "#3A1426", // main text colour
-    accentColor: "#8F3057", // eyebrow colour
-  },
-  {
-    image: "/images/hero4.png",
-    imageAlt: "Embroidered kurtas in soft rose shades",
-    imagePosition: "right center",
-    eyebrow: "Season of Elegance",
-    title: (
-      <>
-        Embroidered Kurtas, <br className="sm:hidden" />
-        Made to Be Loved
-      </>
-    ),
-    text: "Soft rose shades and fine handwork for every celebration this season.",
-    cta: "Shop Now",
-    href: "/shop",
-    textColor: "#3A1426",
-    accentColor: "#8F3057",
-  },
-  // {
-  //   image: "/images/hero3.png",
-  //   imageAlt: "Handcrafted ethnic wear sale",
-  //   imagePosition: "right center",
-  //   eyebrow: "Limited Time Offer",
-  //   title: "Handcrafted Ethnic Wear Sale",
-  //   text: "Up to 50% off on selected styles.",
-  //   cta: "Shop Now",
-  //   href: "/shop",
-  //   textColor: "#3A1426",
-  //   accentColor: "#8F3057",
-  // },
-];
-
 export default function HeroCarousel() {
+  const [storedSlides] = useStored<HeroSlide[]>(KEYS.heroSlides, DEFAULT_HERO_SLIDES);
+  const slides = storedSlides.length > 0 ? storedSlides : DEFAULT_HERO_SLIDES;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  const total = SLIDES.length;
+  const total = slides.length;
+  const activeIndex = current >= total ? 0 : current;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
   const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), [total]);
@@ -122,13 +71,13 @@ export default function HeroCarousel() {
           {/* Sliding track */}
           <div
             className="flex h-full w-full transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${current * 100}%)` }}
+            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
           >
-            {SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <div
-                key={slide.image}
+                key={slide.id ?? slide.image}
                 className="relative h-full w-full shrink-0"
-                aria-hidden={i !== current}
+                aria-hidden={i !== activeIndex}
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${total}`}
@@ -145,6 +94,7 @@ export default function HeroCarousel() {
                     alt={slide.imageAlt}
                     fill
                     priority={i === 0}
+                    unoptimized={slide.image.startsWith("data:")}
                     sizes="(max-width: 1600px) 100vw, 1600px"
                     quality={85}
                     className="object-cover"
@@ -158,7 +108,7 @@ export default function HeroCarousel() {
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex w-[55%] items-center pl-8 pr-1 sm:w-[52%] sm:pl-12 md:w-[46%] md:pl-16 lg:w-[42%] lg:pl-20">
                   <div
                     className={`transition-all duration-700 ease-out ${
-                      i === current ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                      i === activeIndex ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                     }`}
                   >
                     {/* Eyebrow hidden on phones to keep the banner clean */}
@@ -187,7 +137,7 @@ export default function HeroCarousel() {
                     {/* Shop Now button – same style as Add to Cart */}
                     <Link
                       href={slide.href}
-                      tabIndex={i === current ? 0 : -1}
+                      tabIndex={i === activeIndex ? 0 : -1}
                       className="pointer-events-auto mt-2.5 inline-flex items-center justify-center rounded-md border-[1.5px] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] transition-colors duration-200 hover:!bg-[var(--hero-btn-hover)] sm:mt-3 sm:rounded-[10px] sm:px-7 sm:py-2.5 sm:text-xs md:mt-5 md:px-9 md:py-3 md:text-sm"
                       style={
                         {
@@ -224,14 +174,14 @@ export default function HeroCarousel() {
 
           {/* Dots (bottom-right pill) */}
           <div className="absolute bottom-1.5 right-1.5 z-20 flex items-center gap-1 rounded-full bg-white/70 px-1.5 py-1 backdrop-blur-sm sm:bottom-3 sm:right-3 sm:gap-1.5 sm:px-2.5 sm:py-1.5 md:bottom-4 md:right-4">
-            {SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <button
-                key={slide.image}
+                key={slide.id ?? slide.image}
                 aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === current}
+                aria-current={i === activeIndex}
                 onClick={() => setCurrent(i)}
                 className={`h-1 rounded-full transition-all duration-300 sm:h-1.5 ${
-                  i === current
+                  i === activeIndex
                     ? "w-3 bg-[#8F3057] sm:w-5"
                     : "w-1 bg-[#8F3057]/40 hover:bg-[#8F3057]/70 sm:w-1.5"
                 }`}

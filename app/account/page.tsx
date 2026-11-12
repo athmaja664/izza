@@ -8,21 +8,24 @@ import {
   Eye,
   EyeOff,
   Heart,
-  MessageCircle,
   Package,
   Plus,
+  ShieldCheck,
   ShoppingBag,
   Trash2,
   X,
 } from "lucide-react";
 import {
   KEYS,
+  inr,
   useStored,
   type Address,
   type AppUser,
   type CartItem,
   type WishItem,
 } from "@/lib/izha-store";
+import { DEFAULT_ORDERS, type DemoOrder } from "@/lib/demo-store";
+import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 import {
   Flower,
   FlowerBadge,
@@ -155,6 +158,7 @@ function SignedOut({
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [f, setF] = useState({ name: "", email: "", phone: "", identifier: "", password: "" });
+
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (v: string) => setF((s) => ({ ...s, [k]: v }));
@@ -174,7 +178,17 @@ function SignedOut({
     };
   }, [onClose]);
 
-  const validate = () => {
+  const finishAuth = (u: AppUser) => {
+    onDone(u);
+    if (u.role === "admin") {
+      router.push("/admin");
+      return;
+    }
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) router.push(next);
+  };
+
+  const validatePasswordForm = () => {
     if (register) {
       if (f.name.trim().length < 2) return "Enter your full name so we can address you properly.";
       if (!isEmail(f.email.trim())) return "Enter a valid email address, for example name@example.com.";
@@ -186,15 +200,14 @@ function SignedOut({
     return "";
   };
 
-  const submit = async () => {
-    const problem = validate();
+  const submitPasswordForm = async () => {
+    const problem = validatePasswordForm();
     if (problem) return setError(problem);
     setError("");
     setBusy(true);
     try {
       let u: AppUser;
       if (API) {
-        // Same login for admin and customers. Register is for customers only.
         const res = await fetch(`${API}/auth/${register ? "register" : "login"}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -227,8 +240,7 @@ function SignedOut({
           role: du.role === "admin" ? "admin" : "customer",
         };
       } else {
-        /* Demo mode: no backend. Everyone is a customer and no password is stored. */
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 350));
         const id = f.identifier.trim();
         u = {
           name: register ? f.name.trim() : isEmail(id) ? id.split("@")[0] : "Customer",
@@ -237,13 +249,7 @@ function SignedOut({
           role: "customer",
         };
       }
-      onDone(u);
-      if (u.role === "admin") {
-        router.push("/admin");
-        return;
-      }
-      const next = new URLSearchParams(window.location.search).get("next");
-      if (next && next.startsWith("/") && !next.startsWith("//")) router.push(next);
+      finishAuth(u);
     } catch (e) {
       setError(
         e instanceof Error
@@ -256,7 +262,12 @@ function SignedOut({
   };
 
   const onPhoto = AUTH_IMAGE !== "";
-  const perks = ["Save your favourites", "Quick checkout with saved addresses"];
+  const perks = [
+    "Be the first to discover new collections.",
+    "Enjoy exclusive member offers.",
+    "Save your favourite styles.",
+    "Experience a smoother checkout.",
+  ];
 
   return (
     /* Backdrop: click outside the box to close */
@@ -282,7 +293,7 @@ function SignedOut({
           <X size={20} strokeWidth={1.8} />
         </button>
 
-        {/* Left panel: banner on top for mobile, left column on laptop */}
+        {/* Left panel: IZHA Circle */}
         <div className="relative isolate flex min-h-[270px] flex-col justify-between gap-6 overflow-hidden bg-gradient-to-b from-[#F9DDE2] via-[#F2BFC7] to-[#E99A9F]/80 p-6 sm:min-h-[300px] sm:p-8 md:min-h-[580px] md:p-10">
           {onPhoto && (
             <>
@@ -295,7 +306,7 @@ function SignedOut({
                 priority
                 className="-z-10 object-cover"
               />
-              <span className="absolute inset-0 -z-10 bg-[#382B2B]/35" />
+              <span className="absolute inset-0 -z-10 bg-[#382B2B]/40" />
             </>
           )}
           {!onPhoto && (
@@ -304,11 +315,16 @@ function SignedOut({
               <Flower size={220} stroke={0.7} className="pointer-events-none absolute -bottom-12 -right-10 text-white/60" />
             </>
           )}
-          <h2 className={`${serif} relative pr-10 text-[32px] font-medium leading-[1.05] sm:text-[38px] md:pr-0 md:text-[46px] ${onPhoto ? "text-white" : "text-[#332B2B]"}`}>
-            Be part of the
-            <br />
-            IZHA Circle!
-          </h2>
+          <div className="relative pr-10 md:pr-0">
+            <h2 className={`${serif} text-[32px] font-medium leading-[1.08] sm:text-[38px] md:text-[44px] ${onPhoto ? "text-white" : "text-[#332B2B]"}`}>
+              Be part of the
+              <br />
+              IZHA Circle!
+            </h2>
+            <p className={`${serif} mt-2 text-[17px] italic sm:text-[19px] ${onPhoto ? "text-white/90" : "text-[#6f6565]"}`}>
+              A little more love, a little more privilege.
+            </p>
+          </div>
           <ul className="relative space-y-2 md:space-y-2.5">
             {perks.map((t) => (
               <li
@@ -326,22 +342,24 @@ function SignedOut({
           <div className="text-center">
             <p className={`${serif} text-[28px] font-semibold tracking-[0.12em] text-[#332B2B]`}>IZHA BLOOMS</p>
             <p className="mt-0.5 text-[11px] uppercase tracking-[0.28em] text-[#B20947]">Where Every Thread Blooms</p>
-            <h1 className={`${serif} mt-6 text-[34px] font-medium leading-tight text-[#332B2B]`}>
+            <h1 className={`${serif} mt-5 text-[32px] font-medium leading-tight text-[#332B2B]`}>
               {register ? "Create your account" : "Sign in"}
             </h1>
             <span className="mx-auto mt-2 block h-[2px] w-14 bg-[#E8B8C5]" />
             <p className="mt-3 text-[14px] text-[#6f6565]">
-              {register ? "Enter your details to join us." : "Enter your details to continue."}
+              {register
+                ? "Join the IZHA Circle for early access & member rewards."
+                : "Enter your email or mobile number & password to continue."}
             </p>
           </div>
 
-          {error && <div className="mt-5"><ErrorBox text={error} /></div>}
+          {error && <div className="mt-4"><ErrorBox text={error} /></div>}
 
           <form
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
-              submit();
+              submitPasswordForm();
             }}
             className="mt-5 space-y-4"
           >
@@ -375,13 +393,12 @@ function SignedOut({
               onChange={set("password")}
               autoComplete={register ? "new-password" : "current-password"}
             />
-            {/* Same colours as the Add to Cart button: white, pink outline, deep rose text */}
             <button
               type="submit"
               disabled={busy}
-              className={`w-full rounded-[10px] border-[1.5px] border-[color:var(--bs-btn-border,#E99A9F)] bg-[color:var(--bs-btn,#FFFFFF)] px-3 py-3 text-[12px] font-semibold uppercase tracking-[0.05em] text-[color:var(--bs-btn-text,#B20947)] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] sm:py-3.5 sm:text-sm ${focusRing}`}
+              className={`w-full rounded-[10px] border-[1.5px] border-[#E99A9F] bg-white px-3 py-3 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#B20947] transition-colors hover:bg-[#FFF5F7] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] sm:py-3.5 sm:text-sm ${focusRing}`}
             >
-              {busy ? "Please wait" : register ? "Create Account" : "Continue"}
+              {busy ? "Please wait" : register ? "Create Account" : "Sign In"}
             </button>
           </form>
 
@@ -399,16 +416,20 @@ function SignedOut({
             </button>
           </p>
 
+          <div className="mt-3 text-center">
+            <Link
+              href="/checkout"
+              className="text-[13px] font-medium text-[#332B2B] underline underline-offset-4 hover:text-[#B20947]"
+            >
+              Continue to Checkout as Guest
+            </Link>
+          </div>
+
           <p className="mt-4 text-center text-[12px] text-[#6f6565]">
             By continuing, you agree to our{" "}
-            <Link href="/privacy" className="underline underline-offset-2">Privacy Policy</Link> and{" "}
+            <Link href="/privacy-policy" className="underline underline-offset-2">Privacy Policy</Link> and{" "}
             <Link href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</Link>
           </p>
-          {!API && (
-            <p className="mt-2 text-center text-[11px] text-[#9b9090]">
-              Demo mode: sign-in works in this browser only until the store backend is connected.
-            </p>
-          )}
         </div>
       </div>
     </div>
@@ -429,13 +450,15 @@ function SignedIn({
 }) {
   const [cart] = useStored<CartItem[]>(KEYS.cart, []);
   const [wish] = useStored<WishItem[]>(KEYS.wish, []);
+  const [orders] = useStored<DemoOrder[]>(KEYS.orders, DEFAULT_ORDERS);
   const first = user.name.split(" ")[0];
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const myOrders = orders.slice(0, 4);
 
   const stats = [
     { href: "/wishlist", icon: Heart, title: "Wishlist", text: `${wish.length} ${wish.length === 1 ? "piece" : "pieces"} saved` },
-    { href: "/addtocart", icon: ShoppingBag, title: "Cart", text: `${cartCount} ${cartCount === 1 ? "item" : "items"} waiting` },
-    { href: "", icon: Package, title: "Orders", text: "Coming soon" },
+    { href: "/addtocart", icon: ShoppingBag, title: "Shopping Bag", text: `${cartCount} ${cartCount === 1 ? "item" : "items"} waiting` },
+    { href: "#order-history", icon: Package, title: "My Orders", text: `${myOrders.length} recent orders` },
   ];
 
   return (
@@ -443,7 +466,7 @@ function SignedIn({
       <PageHero
         label="Welcome back"
         title={`Hello, ${first}`}
-        sub={user.email || user.phone}
+        sub={user.email || (user.phone ? `+91 ${user.phone}` : "IZHA Circle Member")}
         top={
           <div className="mx-auto mb-5 flex h-24 w-20 items-center justify-center rounded-t-full border-2 border-white/80 bg-white/40 backdrop-blur-md">
             <span className={`${serif} text-[38px] font-medium text-[#B20947]`}>
@@ -452,9 +475,9 @@ function SignedIn({
           </div>
         }
       >
-        {user.role === "admin" && <Link href="/admin" className={glassBtn}>Admin Panel</Link>}
-        <Link href="/addtocart" className={glassBtn}>View Cart</Link>
-        <Link href="/wishlist" className={glassBtn}>View Wishlist</Link>
+        <Link href="/admin" className={glassBtn}>Admin Panel</Link>
+        <Link href="/addtocart" className={glassBtn}>Shopping Bag</Link>
+        <Link href="/wishlist" className={glassBtn}>Wishlist</Link>
       </PageHero>
 
       {/* stat tiles */}
@@ -469,12 +492,10 @@ function SignedIn({
               <p className="text-[13px] text-[#6f6565]">{text}</p>
             </>
           );
-          return href ? (
+          return (
             <Link key={title} href={href} className={`${card} p-5 text-center transition-colors hover:bg-[#FFF5F7] ${focusRing}`}>
               {inner}
             </Link>
-          ) : (
-            <div key={title} className={`${card} p-5 text-center`}>{inner}</div>
           );
         })}
       </div>
@@ -492,29 +513,71 @@ function SignedIn({
           <p className="min-w-0 flex-1 text-[14px] text-[#6f6565]">
             Your bag has {cartCount} {cartCount === 1 ? "piece" : "pieces"} ready to check out.
           </p>
-          <Link href="/addtocart" className={outlineBtn}>Open Cart</Link>
+          <Link href="/checkout" className={outlineBtn}>Checkout</Link>
         </div>
       )}
+
+      {/* Order History */}
+      <section id="order-history" className={`${card} mt-8 p-5 sm:p-6`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className={`${serif} text-[26px] font-medium text-[#332B2B]`}>My Orders</h2>
+            <span className="mt-1 block h-[2px] w-14 bg-[#E8B8C5]" />
+          </div>
+          <Link href="/track-order" className="text-[13px] font-medium text-[#B20947] underline underline-offset-4">
+            Track an order
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {myOrders.map((ord) => (
+            <div key={ord.id} className="rounded-xl border border-[#E8CFD2] bg-[#FCF8F3] p-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-[#332B2B]">{ord.id}</span>
+                <span className="rounded-full bg-[#F9E3E9] px-2.5 py-0.5 text-[11px] font-semibold text-[#B20947]">
+                  {ord.status}
+                </span>
+              </div>
+              <p className="mt-1 text-[12px] text-[#6f6565]">
+                {ord.createdAt} · {ord.items.length} {ord.items.length === 1 ? "item" : "items"} · {ord.paymentMethod}
+              </p>
+              <p className="mt-2 text-[14px] font-medium text-[#332B2B]">
+                Total: {inr(ord.total)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <AddressBook />
         <div className="space-y-6">
           <ProfileCard user={user} setUser={setUser} />
           <div className="rounded-2xl border-2 border-[#E8B8C5] bg-[#FBF1EE] p-6 text-center ring-2 ring-inset ring-white">
-            <MessageCircle size={24} strokeWidth={1.5} className="mx-auto text-[#E99A9F]" />
+            <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#25D366] shadow-sm">
+              <WhatsAppSvg size={20} />
+            </span>
             <h2 className={`${serif} mt-2 text-[24px] font-medium text-[#332B2B]`}>Need a hand?</h2>
             <p className="mt-1 text-[14px] text-[#6f6565]">
               Ask about sizes, delivery or an order. We reply on WhatsApp and phone.
             </p>
             <a
-              href="https://wa.me/918281003090"
+              href="https://wa.me/919995757612"
               target="_blank"
               rel="noopener noreferrer"
-              className={`mt-4 inline-block rounded-full bg-[#E99A9F] px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#382B2B] transition-colors hover:text-white ${focusRing}`}
+              className={`mt-4 inline-flex items-center gap-2 rounded-full bg-[#E99A9F] px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#382B2B] transition-colors hover:text-white ${focusRing}`}
             >
+              <WhatsAppSvg size={16} />
               WhatsApp Us
             </a>
-            <p className="mt-3 text-[13px] text-[#6f6565]">+91 82810 03090</p>
+            <p className="mt-3 text-[13px] text-[#6f6565]">+91 99957 57612</p>
+          </div>
+          <div className={`${card} p-5 text-center`}>
+            <ShieldCheck size={22} className="mx-auto text-[#B20947]" />
+            <p className={`${serif} mt-1 text-[20px] font-medium text-[#332B2B]`}>Store Management</p>
+            <p className="mt-1 text-[13px] text-[#6f6565]">Preview the client admin dashboard, inventory, coupons &amp; banners.</p>
+            <Link href="/admin" className={`${outlineBtn} mt-3 w-full`}>
+              Open Admin Panel
+            </Link>
           </div>
         </div>
       </div>
