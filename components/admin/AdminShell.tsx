@@ -129,9 +129,9 @@ export default function AdminShell({
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#EBDEC9] text-[#332B2B] lg:grid lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen overflow-x-clip bg-[#EBDEC9] text-[#332B2B] lg:grid lg:h-screen lg:grid-cols-[260px_1fr] lg:overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden border-r border-black/10 lg:sticky lg:top-0 lg:block lg:h-screen">
+      <aside className="hidden h-full border-r border-black/10 lg:block lg:overflow-y-auto">
         {sidebarBody}
       </aside>
 
@@ -151,7 +151,7 @@ export default function AdminShell({
       )}
 
       {/* Main Content Area */}
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-col lg:h-screen lg:overflow-y-auto">
         <header className="sticky top-0 z-30 border-b border-[#D7C3AA] bg-[#EBDEC9]/95 px-3.5 py-3.5 backdrop-blur-md sm:px-8 sm:py-4">
           <div className="mx-auto flex max-w-[1240px] flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3 sm:items-center">
