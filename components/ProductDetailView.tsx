@@ -33,6 +33,7 @@ import {
   DEFAULT_ADMIN_PRODUCTS,
   type AdminProduct,
 } from "@/lib/demo-store";
+import { formatMeasure, isStandardSizeSet, sortSizes, type SizeChartRow } from "@/lib/sizes";
 import { CatalogProductCard } from "@/components/CollectionCatalog";
 import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 import AlertBox from "@/components/izha/AlertBox";
@@ -49,13 +50,13 @@ import {
 } from "@/components/izha/ui";
 
 const SIZE_CHART_ROWS = [
-  { size: "XS", bust: '32"', waist: '26"', hip: '35"', uk: "6" },
-  { size: "S", bust: '34"', waist: '28"', hip: '37"', uk: "8" },
-  { size: "M", bust: '36"', waist: '30"', hip: '39"', uk: "10" },
-  { size: "L", bust: '38"', waist: '32"', hip: '41"', uk: "12" },
-  { size: "XL", bust: '40"', waist: '34"', hip: '43"', uk: "14" },
-  { size: "XXL", bust: '42"', waist: '36"', hip: '45"', uk: "16" },
-  { size: "XXXL", bust: '44"', waist: '38"', hip: '47"', uk: "18" },
+  { size: "XS", bust: '32"', waist: '26"', hip: '35"' },
+  { size: "S", bust: '34"', waist: '28"', hip: '37"' },
+  { size: "M", bust: '36"', waist: '30"', hip: '39"' },
+  { size: "L", bust: '38"', waist: '32"', hip: '41"' },
+  { size: "XL", bust: '40"', waist: '34"', hip: '43"' },
+  { size: "XXL", bust: '42"', waist: '36"', hip: '45"' },
+  { size: "XXXL", bust: '44"', waist: '38"', hip: '47"' },
 ];
 
 const SLASH =
@@ -275,13 +276,29 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
 
   const colorLabel = "color" in product ? product.color : undefined;
   const stockCount = "stock" in product ? product.stock : 15;
-  const displaySizes = useMemo(() => {
-    const merged = [...ALL_CLOTH_SIZES] as string[];
-    for (const s of product.sizes) {
-      if (!merged.includes(s)) merged.push(s);
-    }
-    return merged;
-  }, [product.sizes]);
+
+  // Standard products (XS to XXXL only) keep the full row with unavailable sizes crossed out.
+  // Products using number or custom sizes (34, 36, 38...) show only the sizes the admin set.
+  const usesStandardSizes = useMemo(
+    () => isStandardSizeSet(product.sizes),
+    [product.sizes]
+  );
+  const displaySizes = useMemo(
+    () =>
+      usesStandardSizes
+        ? ([...ALL_CLOTH_SIZES] as string[])
+        : sortSizes(product.sizes),
+    [usesStandardSizes, product.sizes]
+  );
+
+  // Measurements the admin typed for this product (overrides the default chart)
+  const customChart = useMemo(() => {
+    const rows = (product as unknown as { sizeChart?: SizeChartRow[] }).sizeChart ?? [];
+    const wanted = rows.filter((r) => product.sizes.includes(r.size));
+    return sortSizes(wanted.map((r) => r.size)).flatMap((s) =>
+      wanted.filter((r) => r.size === s).slice(0, 1)
+    );
+  }, [product]);
 
   const inCartCount = cart
     .filter((i) => i.id === product.id)
@@ -674,34 +691,85 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
               Women&apos;s Size Chart
             </h2>
             <span className="mt-2 block h-[2px] w-12 bg-[#E8B8C5]" />
-            <p className="mt-3 text-[13px] text-[#6f6565]">
-              All measurements below are garment body measurements in inches. If you fall between two sizes, we recommend choosing the larger size for comfortable everyday ease.
-            </p>
 
-            <div className="mt-4 overflow-x-auto rounded-xl border border-[#E8CFD2]">
-              <table className="w-full min-w-[360px] text-left text-[13px]">
-                <thead className="bg-[#FFF5F7] text-[11px] uppercase tracking-[0.14em] text-[#B20947]">
-                  <tr>
-                    <th className="px-3.5 py-2.5">Size</th>
-                    <th className="px-3.5 py-2.5">Bust</th>
-                    <th className="px-3.5 py-2.5">Waist</th>
-                    <th className="px-3.5 py-2.5">Hip</th>
-                    <th className="px-3.5 py-2.5">UK</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E8CFD2] bg-white text-[#332B2B]">
-                  {SIZE_CHART_ROWS.map((row) => (
-                    <tr key={row.size} className="hover:bg-[#FCF8F3]">
-                      <td className="px-3.5 py-2.5 font-semibold">{row.size}</td>
-                      <td className="px-3.5 py-2.5">{row.bust}</td>
-                      <td className="px-3.5 py-2.5">{row.waist}</td>
-                      <td className="px-3.5 py-2.5">{row.hip}</td>
-                      <td className="px-3.5 py-2.5">{row.uk}</td>
-                    </tr>
+            {customChart.length > 0 ? (
+              <>
+                <p className="mt-3 text-[13px] text-[#6f6565]">
+                  All measurements below are garment measurements in inches. If you fall between two sizes, we recommend choosing the larger size for comfortable everyday ease.
+                </p>
+
+                <div className="mt-4 overflow-x-auto rounded-xl border border-[#E8CFD2]">
+                  <table className="w-full min-w-[300px] text-left text-[13px]">
+                    <thead className="bg-[#FFF5F7] text-[11px] uppercase tracking-[0.14em] text-[#B20947]">
+                      <tr>
+                        <th className="px-3.5 py-2.5">Size</th>
+                        <th className="px-3.5 py-2.5">Bust</th>
+                        <th className="px-3.5 py-2.5">Waist</th>
+                        <th className="px-3.5 py-2.5">Hip</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8CFD2] bg-white text-[#332B2B]">
+                      {customChart.map((row) => (
+                        <tr key={row.size} className="hover:bg-[#FCF8F3]">
+                          <td className="px-3.5 py-2.5 font-semibold">{row.size}</td>
+                          <td className="px-3.5 py-2.5">{formatMeasure(row.bust) || "–"}</td>
+                          <td className="px-3.5 py-2.5">{formatMeasure(row.waist) || "–"}</td>
+                          <td className="px-3.5 py-2.5">{formatMeasure(row.hip) || "–"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : usesStandardSizes ? (
+              <>
+                <p className="mt-3 text-[13px] text-[#6f6565]">
+                  All measurements below are garment body measurements in inches. If you fall between two sizes, we recommend choosing the larger size for comfortable everyday ease.
+                </p>
+
+                <div className="mt-4 overflow-x-auto rounded-xl border border-[#E8CFD2]">
+                  <table className="w-full min-w-[300px] text-left text-[13px]">
+                    <thead className="bg-[#FFF5F7] text-[11px] uppercase tracking-[0.14em] text-[#B20947]">
+                      <tr>
+                        <th className="px-3.5 py-2.5">Size</th>
+                        <th className="px-3.5 py-2.5">Bust</th>
+                        <th className="px-3.5 py-2.5">Waist</th>
+                        <th className="px-3.5 py-2.5">Hip</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8CFD2] bg-white text-[#332B2B]">
+                      {SIZE_CHART_ROWS.map((row) => (
+                        <tr key={row.size} className="hover:bg-[#FCF8F3]">
+                          <td className="px-3.5 py-2.5 font-semibold">{row.size}</td>
+                          <td className="px-3.5 py-2.5">{row.bust}</td>
+                          <td className="px-3.5 py-2.5">{row.waist}</td>
+                          <td className="px-3.5 py-2.5">{row.hip}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className="mt-4 rounded-xl border border-[#E8CFD2] bg-white p-4">
+                <p className="text-[13px] font-semibold text-[#332B2B]">
+                  This piece is made in these sizes:
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {displaySizes.map((s) => (
+                    <span
+                      key={s}
+                      className="rounded-full border border-[#E8B8C5] bg-[#FFF5F7] px-3 py-1 text-[12px] font-semibold text-[#B20947]"
+                    >
+                      {s}
+                    </span>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <p className="mt-3 text-[13px] leading-relaxed text-[#6f6565]">
+                  These sizes follow our local sizing, so they do not match the XS–XXXL letter chart. If you are unsure which size is right for you, message us on WhatsApp with your bust, waist and hip measurements and we will confirm the best fit.
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <Link
@@ -970,4 +1038,3 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
     </PageShell>
   );
 }
-
