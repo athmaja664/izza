@@ -1,5 +1,10 @@
+"use client";
+
 import { Cormorant_Garamond } from "next/font/google";
 import { Star } from "lucide-react";
+import Image from "next/image";
+import { KEYS, useStored } from "@/lib/izha-store";
+import { DEFAULT_ADMIN_PRODUCTS, type AdminProduct } from "@/lib/demo-store";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -24,35 +29,39 @@ const COLORS = {
   quote: "#E8B8C5", // big quote mark
 };
 
-/*
-  SAMPLE REVIEWS – these are placeholders so you can see the design.
-  Replace them with real reviews from your customers (with their permission)
-  before the site goes live.
-  rating: 1 to 5
-*/
-const REVIEWS = [
-  {
-    name: "Customer name",
-    place: "Kochi",
-    product: "Embroidered kurta",
-    rating: 5,
-    text: "Sample review. Write what the customer said about the fit, the fabric and the delivery here.",
-  },
-  {
-    name: "Customer name",
-    place: "Aluva",
-    product: "Cotton dress",
-    rating: 5,
-    text: "Sample review. A short, honest line works better than a long one.",
-  },
-  {
-    name: "Customer name",
-    place: "Thrissur",
-    product: "Festive set",
-    rating: 4,
-    text: "Sample review. Mention the occasion she wore it for, if she shared one.",
-  },
-];
+type HomeReview = {
+  id: string;
+  name: string;
+  place: string;
+  product: string;
+  rating: number;
+  text: string;
+  image: string;
+};
+
+type AnyReview = Record<string, unknown>;
+
+/** Collects every review the admin marked "Show on Home" (Admin > Customer Review). */
+function pickFeatured(products: AdminProduct[]): HomeReview[] {
+  const out: HomeReview[] = [];
+  for (const p of products) {
+    const list = (p as unknown as { reviews?: AnyReview[] }).reviews;
+    if (!Array.isArray(list)) continue;
+    list.forEach((r, i) => {
+      if (r.featured !== true) return;
+      out.push({
+        id: `${p.id}-${String(r.id ?? i)}`,
+        name: String(r.name ?? r.author ?? r.user ?? r.customer ?? "Customer"),
+        place: String(r.place ?? r.city ?? ""),
+        product: p.name,
+        rating: Math.min(5, Math.max(1, Number(r.rating ?? r.stars ?? 5))),
+        text: String(r.comment ?? r.text ?? r.body ?? r.review ?? ""),
+        image: String(r.image ?? ""),
+      });
+    });
+  }
+  return out;
+}
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -72,6 +81,13 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export default function ReviewsSection() {
+  const [products] = useStored<AdminProduct[]>(KEYS.adminProducts, DEFAULT_ADMIN_PRODUCTS);
+
+  const reviews = pickFeatured(products);
+
+  // The section stays hidden until the admin picks at least one review
+  if (reviews.length === 0) return null;
+
   return (
     <section
       id="reviews"
@@ -103,11 +119,8 @@ export default function ReviewsSection() {
           style={{ touchAction: "manipulation" }}
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden"
         >
-          {REVIEWS.map((r, i) => (
-            <li
-              key={i}
-              className="w-[85%] shrink-0 snap-start sm:w-[60%] md:w-auto"
-            >
+          {reviews.map((r) => (
+            <li key={r.id} className="w-[85%] shrink-0 snap-start sm:w-[60%] md:w-auto">
               <figure
                 className="relative flex h-full flex-col rounded-2xl border-2 p-6 shadow-[inset_0_0_0_2px_#fff]"
                 style={{ borderColor: COLORS.frame, backgroundColor: COLORS.cardBg }}
@@ -120,6 +133,19 @@ export default function ReviewsSection() {
                 >
                   &rdquo;
                 </span>
+
+                {r.image && (
+                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#E8B8C5]">
+                    <Image
+                      src={r.image}
+                      alt={`Photo shared by ${r.name}`}
+                      fill
+                      unoptimized={r.image.startsWith("data:")}
+                      sizes="(min-width: 768px) 33vw, 85vw"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
 
                 <Stars rating={r.rating} />
 
@@ -152,7 +178,7 @@ export default function ReviewsSection() {
                     </p>
                     <p className="text-xs" style={{ color: COLORS.body }}>
                       {r.place}
-                      {" · "}
+                      {r.place && r.product && " · "}
                       <span style={{ color: COLORS.plum }}>{r.product}</span>
                     </p>
                   </div>
