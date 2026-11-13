@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Download, LogOut, ShoppingBag, Users } from "lucide-react";
-import AdminShell, { card, cardCream, outlineBtn } from "@/components/admin/AdminShell";
+import AdminShell, { card, cardCream, inputCls, outlineBtn } from "@/components/admin/AdminShell";
 import { serif } from "@/components/izha/ui";
 import {
   STAGES,
@@ -64,9 +64,15 @@ export default function AdminReportsPage() {
   const [events, setEvents] = useState<VisitEvent[]>([]);
   const [range, setRange] = useState<Range>("30");
   const [onlyDropped, setOnlyDropped] = useState(false);
+  // "now" is set in the browser only. Calling Date.now() during render breaks
+  // Next.js prerendering (the Vercel build error).
+  const [now, setNow] = useState(0);
 
   useEffect(() => {
-    const load = () => setEvents(readEvents());
+    const load = () => {
+      setEvents(readEvents());
+      setNow(Date.now());
+    };
     load();
     window.addEventListener("storage", load);
     window.addEventListener("izha-visit-events-changed", load);
@@ -77,7 +83,7 @@ export default function AdminReportsPage() {
   }, []);
 
   const sessions = useMemo<SessionRow[]>(() => {
-    const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
+    const cutoff = range === "all" || !now ? 0 : now - Number(range) * 86400000;
     const map = new Map<string, VisitEvent[]>();
     for (const e of events) {
       if (new Date(e.at).getTime() < cutoff) continue;
@@ -100,7 +106,7 @@ export default function AdminReportsPage() {
       });
     });
     return rows.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen));
-  }, [events, range]);
+  }, [events, range, now]);
 
   const funnel = useMemo(
     () =>
@@ -157,7 +163,7 @@ export default function AdminReportsPage() {
         <select
           value={range}
           onChange={(e) => setRange(e.target.value as Range)}
-          className="rounded-lg border border-[#E8B8C5] bg-white px-3 py-2 text-[13px] text-[#332B2B]"
+          className={`${inputCls} !w-auto !py-2 !text-[13px]`}
         >
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
