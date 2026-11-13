@@ -7,15 +7,16 @@ import { Mail, MapPin, Phone, Truck, ShieldCheck, MessageCircle, PackageCheck } 
 const BRAND = "IZHA BLOOMS";
 const BUSINESS_NAME = "Empire Ae It Services";
 const TAGLINE =
-  "Where Every Thread Blooms. Thoughtfully curated women's wear that brings together timeless elegance, effortless comfort and distinctive details. Designed with care in Kerala, for women who love to express themselves through style.";
+  "Thoughtfully curated women's wear that brings together timeless elegance, effortless comfort and distinctive details. Designed with care in Kerala, for women who love to express themselves through style.";
 
 const PHONE_DISPLAY = "+91 99957 57612";
 const PHONE_DIGITS = "919995757612";
 const EMAIL_ADDRESS = "izhablooms@gmail.com";
 const LOCATION = "Aluva, Kerala, India";
 
-const INSTAGRAM_URL = "https://www.instagram.com/izhablooms/";
-const FACEBOOK_URL = "https://www.facebook.com/izhablooms/";
+const INSTAGRAM_URL = "https://www.instagram.com/izha_blooms?dlrf=MTY3cWtxbzRubTM5eg==";
+const FACEBOOK_URL =
+  "https://www.facebook.com/share/1CTQqHnV9K/";
 
 const WHATSAPP_URL = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
   "Hi IZHA BLOOMS, I would like personal assistance with your collection."

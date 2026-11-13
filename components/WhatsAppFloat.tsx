@@ -25,7 +25,7 @@ export default function WhatsAppFloat() {
   const pathname = usePathname() ?? "/";
   if (pathname.startsWith("/admin")) return null;
 
-  let text = "Hi IZZA Designs, I would like personal assistance with your collection.";
+  let text = "Hi IZHA BLOOMS, I would like personal assistance with your collection.";
   if (pathname.startsWith("/product/")) {
     const id = pathname.replace("/product/", "").split("/")[0];
     const prod = PRODUCTS.find((p) => p.id === id);

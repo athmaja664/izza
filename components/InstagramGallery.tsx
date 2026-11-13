@@ -9,7 +9,7 @@ import { DEFAULT_INSTAGRAM_POSTS, type InstagramPost } from "@/lib/demo-store";
 
 const INSTAGRAM_HANDLE = "@izhablooms";
 
-const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/izhablooms/";
+const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/izha_blooms?srtk=dnZlcGcxN2llZGV1";
 
 /* Tilt and height of each card (same order as GALLERY).
    Change the rotate-* and lg:mt-* values to rearrange the collage. */
