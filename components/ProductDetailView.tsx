@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ChevronLeft,
+  ChevronRight,
   Heart,
   Minus,
   Plus,
@@ -367,6 +369,40 @@ function ProductDetailContent({ product }: { product: Product | AdminProduct }) 
                   }
                 />
               </button>
+
+              {/* Image gallery Previous and Next navigation buttons */}
+              {product.gallery.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveImage(
+                        (prev) =>
+                          (prev - 1 + product.gallery.length) % product.gallery.length
+                      )
+                    }
+                    aria-label="Previous image"
+                    className={`absolute left-2.5 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#332B2B] shadow-md transition-all hover:bg-white hover:text-[#B20947] hover:scale-105 sm:left-3 sm:h-10 sm:w-10 ${focusRing}`}
+                  >
+                    <ChevronLeft size={20} strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveImage(
+                        (prev) => (prev + 1) % product.gallery.length
+                      )
+                    }
+                    aria-label="Next image"
+                    className={`absolute right-2.5 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#332B2B] shadow-md transition-all hover:bg-white hover:text-[#B20947] hover:scale-105 sm:right-3 sm:h-10 sm:w-10 ${focusRing}`}
+                  >
+                    <ChevronRight size={20} strokeWidth={2} />
+                  </button>
+                  <span className="absolute bottom-3 right-3 select-none rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+                    {activeImage + 1} / {product.gallery.length}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

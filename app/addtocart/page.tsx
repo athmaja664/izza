@@ -326,7 +326,9 @@ export default function CartPage() {
               <p className="mt-5 text-center text-[13px] text-[#6f6565]">
                 Not sure about a size?{" "}
                 <a
-                  href="https://wa.me/919995757612"
+                  href={`https://wa.me/919995757612?text=${encodeURIComponent(
+                    "Hi IZHA BLOOMS! I'm interested in your collection. Could you please assist me?"
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-1.5 text-[#B20947] underline underline-offset-4 ${focusRing}`}

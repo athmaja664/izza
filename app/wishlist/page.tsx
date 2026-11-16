@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Heart, Minus, Plus, ShieldCheck, Trash2, Truck } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingBag, X } from "lucide-react";
 import {
   KEYS,
   inr,
@@ -11,418 +11,529 @@ import {
   type CartItem,
   type WishItem,
 } from "@/lib/izha-store";
-import { PRODUCTS } from "@/lib/products";
-import { CatalogProductCard } from "@/components/CollectionCatalog";
-import { WhatsAppSvg } from "@/components/WhatsAppFloat";
+import { getProductById, type Product } from "@/lib/products";
 import {
-  EmptyBlock,
-  FlowerBadge,
-  PageTitle,
+  EmptyState,
   PageShell,
+  PageTitle,
   card,
-  cardCream,
   focusRing,
-  outlineBtn,
   serif,
   solidBtn,
 } from "@/components/izha/ui";
 
-export default function CartPage() {
-  const [cart, setCart, ready] = useStored<CartItem[]>(KEYS.cart, []);
-  const [wish, setWish] = useStored<WishItem[]>(KEYS.wish, []);
+/* Change to "/addtocart" if that is the live shopping bag route
+   (the Navbar currently links there). */
+const BAG_HREF = "/cart";
+const MAX_QTY = 10; // same cap the Shopping Bag quantity buttons use
 
-  const { subtotal, savings, count } = useMemo(() => {
-    let subtotal = 0;
-    let savings = 0;
-    let count = 0;
-    for (const i of cart) {
-      subtotal += i.price * i.qty;
-      count += i.qty;
-      if (i.oldPrice && i.oldPrice > i.price)
-        savings += (i.oldPrice - i.price) * i.qty;
+/* ---------- Stock helpers (driven only by product data) ---------- */
+const availableSizes = (p: Product) =>
+  p.sizes.filter((s) => !(p.soldOutSizes ?? []).includes(s));
+const isSoldOut = (p: Product) =>
+  p.sizes.length > 0 && availableSizes(p).length === 0;
+
+/* ---------- Toast ---------- */
+type Toast = {
+  id: number;
+  message: string;
+  kind: "bag" | "removed" | "info";
+  undo?: () => void;
+};
+
+const toastLink = `text-[12px] font-semibold uppercase tracking-[0.05em] text-[#B20947] underline-offset-4 hover:underline ${focusRing} rounded`;
+
+/* ---------- Size picker (bottom sheet on mobile, dialog on desktop) ---------- */
+function SizePicker({
+  product,
+  onClose,
+  onConfirm,
+}: {
+  product: Product;
+  onClose: () => void;
+  onConfirm: (size: string) => void;
+}) {
+  const [size, setSize] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const soldOut = product.soldOutSizes ?? [];
+  const hasDiscount = product.mrp > product.price;
+
+  // Focus the dialog, lock page scroll, and hand focus back when it closes
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      opener?.focus();
+    };
+  }, []);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      onClose();
+      return;
     }
-    return { subtotal, savings, count };
-  }, [cart]);
-
-  const recommendations = useMemo(() => {
-    const inCartIds = new Set(cart.map((c) => c.id));
-    return PRODUCTS.filter((p) => !inCartIds.has(p.id)).slice(0, 4);
-  }, [cart]);
-
-  // Products saved in the wishlist (shown when the cart is empty)
-  const wishlistProducts = useMemo(() => {
-    const wishIds = new Set(wish.map((w) => w.id));
-    return PRODUCTS.filter((p) => wishIds.has(p.id)).slice(0, 4);
-  }, [wish]);
-
-  const isLiked = (id: string) => wish.some((x) => x.id === id);
-
-  const toggleWish = (p: (typeof PRODUCTS)[number]) => {
-    setWish((list) =>
-      list.some((x) => x.id === p.id)
-        ? list.filter((x) => x.id !== p.id)
-        : [
-            ...list,
-            {
-              id: p.id,
-              name: p.name,
-              image: p.image,
-              price: p.price,
-              oldPrice: p.mrp,
-              soldOutSizes: p.soldOutSizes,
-            },
-          ]
+    if (e.key !== "Tab") return;
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+      "button:not([disabled])"
     );
+    if (!focusable || focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === dialogRef.current)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
   };
 
-  const changeQty = (id: string, size: string, delta: number) =>
-    setCart((items) =>
-      items.map((i) =>
-        i.id === id && i.size === size
-          ? { ...i, qty: Math.min(10, Math.max(1, i.qty + delta)) }
-          : i
-      )
-    );
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-[#382B2B]/50 sm:items-center sm:p-4"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={onKeyDown}
+        className={`${card} relative w-full max-w-md rounded-b-none p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] outline-none sm:rounded-b-2xl`}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close size selection"
+          className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-[#6f6565] hover:bg-[#FFF5F7] hover:text-[#B20947] ${focusRing}`}
+        >
+          <X size={20} strokeWidth={1.6} />
+        </button>
 
-  const remove = (id: string, size: string) =>
-    setCart((items) => items.filter((i) => !(i.id === id && i.size === size)));
+        <div className="flex items-center gap-4 pr-10">
+          <div className="relative h-24 w-[76px] shrink-0 overflow-hidden rounded-lg bg-[#F9E3E9]">
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="76px"
+              quality={75}
+              className="object-cover"
+            />
+          </div>
+          <div className="min-w-0">
+            <h2
+              id={titleId}
+              className={`${serif} line-clamp-2 text-[22px] font-medium leading-snug text-[#332B2B]`}
+            >
+              {product.name}
+            </h2>
+            <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[15px] font-medium text-[#332B2B]">
+              {inr(product.price)}
+              {hasDiscount && (
+                <span className="text-[12px] font-normal text-[#9b9090] line-through">
+                  {inr(product.mrp)}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
 
-  const moveToWishlist = (item: CartItem) => {
-    setWish((w) =>
-      w.some((x) => x.id === item.id)
-        ? w
-        : [
-            ...w,
-            {
-              id: item.id,
-              name: item.name,
-              image: item.image,
-              price: item.price,
-              oldPrice: item.oldPrice,
-            },
-          ]
-    );
-    remove(item.id, item.size);
+        <p className="mt-5 text-[13px] font-medium text-[#332B2B]">Select a size</p>
+        <div
+          role="radiogroup"
+          aria-label="Select a size"
+          className="mt-2.5 flex flex-wrap gap-2"
+        >
+          {product.sizes.map((s) => {
+            const out = soldOut.includes(s);
+            const on = size === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                disabled={out}
+                title={out ? "Sold out" : undefined}
+                onClick={() => setSize(s)}
+                className={`h-11 min-w-[52px] rounded-full border px-4 text-[13px] ${focusRing} ${
+                  out
+                    ? "cursor-not-allowed border-[#e5dcde] bg-[#faf6f6] text-[#b3a9ab] line-through"
+                    : on
+                      ? "border-[#E99A9F] bg-[#E99A9F] text-white"
+                      : "border-[#E8B8C5] bg-white text-[#332B2B] hover:bg-[#FFF5F7]"
+                }`}
+              >
+                {s}
+                {out && <span className="sr-only"> (sold out)</span>}
+              </button>
+            );
+          })}
+        </div>
+        {soldOut.length > 0 && (
+          <p className="mt-2 text-[12px] text-[#6f6565]">
+            Crossed-out sizes are sold out.
+          </p>
+        )}
+
+        <button
+          type="button"
+          disabled={!size}
+          onClick={() => size && onConfirm(size)}
+          className={`${solidBtn} mt-6 w-full`}
+        >
+          {size ? "Add to Shopping Bag" : "Choose a size to continue"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Wishlist card (same look as the collection product cards) ---------- */
+function WishlistCard({
+  item,
+  product,
+  onRemove,
+  onAdd,
+}: {
+  item: WishItem;
+  product?: Product;
+  onRemove: () => void;
+  onAdd: () => void;
+}) {
+  // Prefer live catalogue data; fall back to what was saved with the item
+  const name = product?.name ?? item.name;
+  const image = product?.image ?? item.image;
+  const price = product?.price ?? item.price;
+  const mrp = product?.mrp ?? item.oldPrice;
+  const oldPrice = mrp !== undefined && mrp > price ? mrp : undefined;
+  const percent = oldPrice
+    ? Math.round(((oldPrice - price) / oldPrice) * 100)
+    : 0;
+
+  const unavailable = !product;
+  const soldOut = product ? isSoldOut(product) : false;
+  const limited =
+    !!product && !soldOut && availableSizes(product).length < product.sizes.length;
+  const dimmed = unavailable || soldOut;
+
+  const status = unavailable
+    ? "No longer available"
+    : soldOut
+      ? "Sold out"
+      : limited
+        ? "Limited sizes"
+        : "In stock";
+  const statusColor = dimmed
+    ? "text-[#B20947]"
+    : limited
+      ? "text-[#B5607A]"
+      : "text-[#5f7a62]";
+
+  const media = (
+    <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F9E3E9]">
+      <Image
+        src={image}
+        alt={name}
+        fill
+        sizes="(min-width: 1024px) 250px, (min-width: 768px) 33vw, 50vw"
+        quality={80}
+        className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
+          dimmed ? "opacity-60" : ""
+        }`}
+      />
+      {product?.isNew && (
+        <span className="absolute left-2 top-2 bg-[#B20947] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+          New
+        </span>
+      )}
+      {percent > 0 && (
+        <span className="absolute bottom-2 left-2 rounded bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-[#B20947]">
+          {percent}% OFF
+        </span>
+      )}
+    </div>
+  );
+
+  const details = (
+    <div className="min-w-0 px-3 pt-2.5">
+      {product && (
+        <p className="text-[11px] uppercase tracking-[0.15em] text-[#B5607A]">
+          {product.category}
+        </p>
+      )}
+      <h3 className="mt-0.5 line-clamp-1 text-[14px] text-[#332B2B] sm:text-[15px]">
+        {name}
+      </h3>
+      <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[15px] font-medium text-[#332B2B]">
+        {inr(price)}
+        {oldPrice && (
+          <span className="text-[12px] font-normal text-[#9b9090] line-through">
+            {inr(oldPrice)}
+          </span>
+        )}
+      </p>
+      <p className={`mt-1 text-[12px] font-medium ${statusColor}`}>{status}</p>
+    </div>
+  );
+
+  return (
+    <li className={`${card} group relative flex min-w-0 flex-col overflow-hidden`}>
+      {product ? (
+        <Link href={`/product/${product.id}`} className={`block ${focusRing}`}>
+          {media}
+          {details}
+        </Link>
+      ) : (
+        <div>
+          {media}
+          {details}
+        </div>
+      )}
+
+      <div className="mt-auto px-3 pb-3 pt-2.5">
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={dimmed}
+          aria-label={dimmed ? `${name} is unavailable` : `Add ${name} to shopping bag`}
+          className={`flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[#E99A9F] bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#B20947] transition-colors hover:bg-[#FFF5F7] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] disabled:hover:bg-white sm:text-[12px] ${focusRing}`}
+        >
+          <ShoppingBag size={15} strokeWidth={1.7} />
+          {dimmed ? (
+            "Unavailable"
+          ) : (
+            <>
+              <span className="xl:hidden">Add to Bag</span>
+              <span className="hidden xl:inline">Add to Shopping Bag</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Remove from wishlist */}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${name} from wishlist`}
+        className={`absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm ${focusRing}`}
+      >
+        <Heart size={18} strokeWidth={1.6} className="fill-[#B20947] text-[#B20947]" />
+      </button>
+    </li>
+  );
+}
+
+/* ---------- Page ---------- */
+export default function WishlistPage() {
+  const [wish, setWish, ready] = useStored<WishItem[]>(KEYS.wish, []);
+  const [cart, setCart] = useStored<CartItem[]>(KEYS.cart, []);
+  const [picker, setPicker] = useState<Product | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const toastId = useRef(0);
+
+  // One row per product id; ignores damaged entries
+  const rows = useMemo(() => {
+    const list = Array.isArray(wish) ? wish : [];
+    const seen = new Set<string>();
+    const out: { item: WishItem; product?: Product }[] = [];
+    for (const item of list) {
+      if (!item?.id || seen.has(item.id)) continue;
+      seen.add(item.id);
+      out.push({ item, product: getProductById(item.id) });
+    }
+    return out;
+  }, [wish]);
+
+  // Tidy storage if it held duplicates or bad entries
+  useEffect(() => {
+    if (!ready) return;
+    const stored = Array.isArray(wish) ? wish.length : -1;
+    if (rows.length !== stored) setWish(rows.map((r) => r.item));
+  }, [ready, rows, wish, setWish]);
+
+  // Auto-dismiss the toast
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), toast.kind === "bag" ? 6000 : 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const showToast = (t: Omit<Toast, "id">) =>
+    setToast({ ...t, id: ++toastId.current });
+
+  const removeFromWishlist = (item: WishItem) => {
+    const index = rows.findIndex((r) => r.item.id === item.id);
+    setWish((list) => list.filter((w) => w.id !== item.id));
+    showToast({
+      message: "Removed from your wishlist.",
+      kind: "removed",
+      undo: () => {
+        setWish((list) => {
+          if (list.some((w) => w.id === item.id)) return list;
+          const next = [...list];
+          next.splice(Math.min(Math.max(index, 0), next.length), 0, item);
+          return next;
+        });
+        setToast(null);
+      },
+    });
+  };
+
+  const addToBag = (p: Product, size: string) => {
+    const existing = cart.find((c) => c.id === p.id && c.size === size);
+    if (existing && existing.qty >= MAX_QTY) {
+      showToast({
+        message: `You already have ${MAX_QTY} of this size in your bag.`,
+        kind: "info",
+      });
+      return;
+    }
+    setCart((items) => {
+      const i = items.findIndex((c) => c.id === p.id && c.size === size);
+      if (i >= 0)
+        return items.map((c, n) =>
+          n === i ? { ...c, qty: Math.min(MAX_QTY, c.qty + 1) } : c
+        );
+      return [
+        ...items,
+        {
+          id: p.id,
+          name: p.name,
+          image: p.image,
+          size,
+          price: p.price,
+          oldPrice: p.mrp,
+          qty: 1,
+        },
+      ];
+    });
+    showToast({ message: `Added to your shopping bag · Size ${size}`, kind: "bag" });
+  };
+
+  const startAdd = (p: Product) => {
+    if (isSoldOut(p)) return;
+    if (p.sizes.length === 0) return addToBag(p, "Free Size");
+    if (p.sizes.length === 1) return addToBag(p, p.sizes[0]);
+    setPicker(p); // several sizes: let the customer choose
   };
 
   return (
     <PageShell>
       <PageTitle
-        title="Your Shopping Bag"
-        sub={
-          ready && count > 0
-            ? `Your favourites, one step closer to you. · ${count} ${count === 1 ? "piece" : "pieces"}`
-            : "Your favourites, one step closer to you."
-        }
+        title="My Wishlist"
+        sub="Your favourite styles, saved for whenever you're ready."
       />
 
-      {ready && cart.length === 0 && (
-        <EmptyBlock
-          text="Your shopping bag is currently empty"
-          href="/shop"
-          action="Continue Shopping"
-        />
-      )}
-
-      {/* Wishlist picks, only when the bag is empty */}
-      {ready && cart.length === 0 && wishlistProducts.length > 0 && (
-        <section
-          aria-labelledby="bag-wishlist-heading"
-          className="mt-12 border-t border-[#E8CFD2] pt-12"
+      {!ready && (
+        <div
+          aria-busy="true"
+          className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
         >
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#B5607A]">
-                Saved By You
-              </p>
-              <h2
-                id="bag-wishlist-heading"
-                className={`${serif} mt-1 text-[28px] font-medium text-[#332B2B] sm:text-[34px]`}
-              >
-                From Your Wishlist
-              </h2>
-            </div>
-            <Link
-              href="/wishlist"
-              className="text-[13px] font-medium text-[#B20947] underline underline-offset-4"
-            >
-              View Wishlist
-            </Link>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {wishlistProducts.map((p) => (
-              <CatalogProductCard
-                key={p.id}
-                p={p}
-                liked={isLiked(p.id)}
-                onLike={() => toggleWish(p)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {ready && cart.length > 0 && (
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Link
-                href="/shop"
-                className={`inline-flex items-center gap-1.5 text-[13px] font-medium text-[#B20947] underline-offset-4 hover:underline ${focusRing}`}
-              >
-                <ArrowLeft size={15} />
-                Continue Shopping
-              </Link>
-              <span className="text-[13px] text-[#6f6565]">
-                Free doorstep shipping in Kerala · Pan-India delivery available
-              </span>
-            </div>
-
-            <ul className="space-y-4">
-              {cart.map((item) => (
-                <li
-                  key={`${item.id}-${item.size}`}
-                  className={`${card} flex gap-4 p-3 sm:p-4`}
-                >
-                  {/* arch photo frame */}
-                  <Link
-                    href={`/product/${item.id}`}
-                    className="h-36 w-28 shrink-0 rounded-t-full rounded-b-xl border border-[#E8B8C5] bg-white p-1 sm:h-44 sm:w-32"
-                  >
-                    <div className="relative h-full w-full overflow-hidden rounded-t-full rounded-b-lg bg-[#FFF5F7]">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="128px"
-                        quality={75}
-                        className="object-cover"
-                      />
-                    </div>
-                  </Link>
-
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <Link
-                          href={`/product/${item.id}`}
-                          className={`${serif} line-clamp-2 text-[20px] font-medium leading-snug text-[#332B2B] hover:text-[#B20947]`}
-                        >
-                          {item.name}
-                        </Link>
-                        <p className="mt-1 text-[13px] text-[#6f6565]">
-                          Size {item.size}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => remove(item.id, item.size)}
-                        aria-label={`Remove ${item.name} from shopping bag`}
-                        className={`rounded-full p-2 text-[#6f6565] hover:bg-[#FFF5F7] hover:text-[#B20947] ${focusRing}`}
-                      >
-                        <Trash2 size={18} strokeWidth={1.6} />
-                      </button>
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap items-baseline gap-2">
-                      <span
-                        className={`${serif} text-[20px] font-semibold text-[#332B2B]`}
-                      >
-                        {inr(item.price)}
-                      </span>
-                      {item.oldPrice && item.oldPrice > item.price && (
-                        <>
-                          <span className="text-[12px] text-[#9b9090] line-through">
-                            {inr(item.oldPrice)}
-                          </span>
-                          <span className="rounded bg-[#F9E3E9] px-1.5 py-0.5 text-[10px] font-semibold text-[#B5607A]">
-                            {Math.round(
-                              ((item.oldPrice - item.price) / item.oldPrice) * 100
-                            )}
-                            % OFF
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
-                      <div
-                        className="flex items-center gap-3"
-                        role="group"
-                        aria-label={`Quantity for ${item.name}`}
-                      >
-                        <button
-                          onClick={() => changeQty(item.id, item.size, -1)}
-                          disabled={item.qty <= 1}
-                          aria-label="Decrease quantity"
-                          className={`flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] border-[#E99A9F] bg-white text-[#332B2B] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] ${focusRing}`}
-                        >
-                          <Minus size={16} strokeWidth={1.8} />
-                        </button>
-                        <span className="min-w-[1.5rem] text-center text-[15px] font-medium text-[#332B2B]">
-                          {item.qty}
-                        </span>
-                        <button
-                          onClick={() => changeQty(item.id, item.size, 1)}
-                          disabled={item.qty >= 10}
-                          aria-label="Increase quantity"
-                          className={`flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] border-[#E99A9F] bg-white text-[#332B2B] disabled:cursor-not-allowed disabled:border-[#d9cfd2] disabled:text-[#b3a9ab] ${focusRing}`}
-                        >
-                          <Plus size={16} strokeWidth={1.8} />
-                        </button>
-                      </div>
-
-                      <button
-                        onClick={() => moveToWishlist(item)}
-                        className={`inline-flex items-center gap-1.5 rounded text-[13px] text-[#B20947] underline-offset-4 hover:underline ${focusRing}`}
-                      >
-                        <Heart size={15} strokeWidth={1.7} />
-                        Move to wishlist
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            {/* Helpful shipping & trust card */}
-            <div className={`${cardCream} grid gap-4 p-4 sm:grid-cols-2 sm:p-5`}>
-              <div className="flex items-start gap-3">
-                <Truck size={20} className="mt-0.5 shrink-0 text-[#B20947]" />
-                <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-[#332B2B]">
-                    Pan-India Delivery
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-[#6f6565]">
-                    Check your PIN code &amp; apply coupon codes cleanly on the next step.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#B20947]" />
-                <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-[#332B2B]">
-                    Guest Checkout Available
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-[#6f6565]">
-                    Complete your order as a guest, or sign in with your mobile OTP.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Order summary with flower badge on the top edge */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className={`${card} relative px-5 pb-6 pt-9 sm:px-6`}>
-              <FlowerBadge />
-              <h2
-                className={`${serif} text-center text-[26px] font-medium text-[#332B2B]`}
-              >
-                Order Summary
-              </h2>
-              <span className="mx-auto mt-2 block h-[2px] w-14 bg-[#E8B8C5]" />
-
-              <dl className="mt-6 space-y-3 text-[15px]">
-                <div className="flex justify-between">
-                  <dt className="text-[#6f6565]">
-                    Subtotal ({count} {count === 1 ? "item" : "items"})
-                  </dt>
-                  <dd className="font-medium text-[#332B2B]">
-                    {inr(subtotal)}
-                  </dd>
-                </div>
-                {savings > 0 && (
-                  <div className="flex justify-between">
-                    <dt className="text-[#6f6565]">Product Savings</dt>
-                    <dd className="font-medium text-[#5f7a62]">
-                      {inr(savings)}
-                    </dd>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <dt className="text-[#6f6565]">Shipping &amp; Coupons</dt>
-                  <dd className="text-[#6f6565]">Calculated at checkout</dd>
-                </div>
-                <div className="flex items-baseline justify-between border-t border-[#E8CFD2] pt-4">
-                  <dt
-                    className={`${serif} text-[22px] font-semibold text-[#332B2B]`}
-                  >
-                    Estimated Total
-                  </dt>
-                  <dd
-                    className={`${serif} text-[26px] font-semibold text-[#332B2B]`}
-                  >
-                    {inr(subtotal)}
-                  </dd>
-                </div>
-              </dl>
-
-              <Link href="/checkout" className={`${solidBtn} mt-6 w-full`}>
-                Proceed to Checkout
-              </Link>
-              <Link href="/shop" className={`${outlineBtn} mt-3 w-full`}>
-                Continue Shopping
-              </Link>
-              <Link href="/wishlist" className={`${outlineBtn} mt-2.5 w-full`}>
-                View Wishlist
-              </Link>
-
-              <p className="mt-5 text-center text-[13px] text-[#6f6565]">
-                Not sure about a size?{" "}
-                <a
-                  href="https://wa.me/919995757612"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 text-[#B20947] underline underline-offset-4 ${focusRing}`}
-                >
-                  <WhatsAppSvg size={14} />
-                  Chat with us on WhatsApp
-                </a>
-              </p>
-            </div>
-          </aside>
+          <span className="sr-only" role="status">
+            Loading your wishlist
+          </span>
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              aria-hidden="true"
+              className={`${card} aspect-[4/6] animate-pulse bg-[#FFF5F7]`}
+            />
+          ))}
         </div>
       )}
 
-      {/* Product Recommendations */}
-      {recommendations.length > 0 && (
-        <section
-          aria-labelledby="bag-recs-heading"
-          className="mt-16 border-t border-[#E8CFD2] pt-12"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#B5607A]">
-                Curated For You
-              </p>
-              <h2
-                id="bag-recs-heading"
-                className={`${serif} mt-1 text-[28px] font-medium text-[#332B2B] sm:text-[34px]`}
-              >
-                You May Also Love
-              </h2>
-            </div>
+      {ready && rows.length === 0 && (
+        <EmptyState
+          icon={<Heart size={34} strokeWidth={1.3} />}
+          title="Your Wishlist is Waiting to Bloom!"
+          text="You haven't saved any favourite styles yet. Explore our collections and save the pieces you love to find them here later."
+          href="/collections"
+          action="Explore Collections"
+        />
+      )}
+
+      {ready && rows.length > 0 && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[14px] text-[#6f6565]" aria-live="polite">
+              Showing <b className="text-[#332B2B]">{rows.length}</b> saved{" "}
+              {rows.length === 1 ? "item" : "items"}.
+            </p>
             <Link
-              href="/collections"
-              className="text-[13px] font-medium text-[#B20947] underline underline-offset-4"
+              href="/shop"
+              className={`inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-[#B20947] underline-offset-4 hover:underline ${focusRing}`}
             >
-              Explore Collections
+              <ArrowLeft size={15} />
+              Continue Shopping
             </Link>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {recommendations.map((p) => (
-              <CatalogProductCard
-                key={p.id}
-                p={p}
-                liked={isLiked(p.id)}
-                onLike={() => toggleWish(p)}
+          <ul className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {rows.map(({ item, product }) => (
+              <WishlistCard
+                key={item.id}
+                item={item}
+                product={product}
+                onRemove={() => removeFromWishlist(item)}
+                onAdd={() => product && startAdd(product)}
               />
             ))}
-          </div>
-        </section>
+          </ul>
+        </>
       )}
+
+      {picker && (
+        <SizePicker
+          product={picker}
+          onClose={() => setPicker(null)}
+          onConfirm={(size) => {
+            addToBag(picker, size);
+            setPicker(null);
+          }}
+        />
+      )}
+
+      {/* Feedback toast: the region stays mounted so screen readers announce changes */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 bottom-20 z-[90] flex justify-center px-4 sm:bottom-6"
+      >
+        {toast && (
+          <div className="pointer-events-auto flex w-full max-w-md items-center justify-between gap-4 rounded-2xl border-2 border-[#E8B8C5] bg-white px-4 py-3 shadow-xl">
+            <p className="text-[13px] text-[#332B2B]">{toast.message}</p>
+            <div className="flex shrink-0 items-center gap-3">
+              {toast.kind === "bag" && (
+                <>
+                  <Link href={BAG_HREF} className={toastLink}>
+                    View Bag
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setToast(null)}
+                    className={`${toastLink} !text-[#6f6565]`}
+                  >
+                    Keep browsing
+                  </button>
+                </>
+              )}
+              {toast.kind === "removed" && toast.undo && (
+                <button type="button" onClick={toast.undo} className={toastLink}>
+                  Undo
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </PageShell>
   );
 }

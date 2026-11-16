@@ -19,7 +19,7 @@ const FACEBOOK_URL =
   "https://www.facebook.com/share/1CTQqHnV9K/";
 
 const WHATSAPP_URL = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
-  "Hi IZHA BLOOMS, I would like personal assistance with your collection."
+  "Hi IZHA BLOOMS! I'm interested in your collection. Could you please assist me?"
 )}`;
 
 const TRUST = [

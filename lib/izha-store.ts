@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type CartItem = {
   id: string;
@@ -62,10 +62,18 @@ export const SIZES = ["XS", "S", "M", "L", "XL"];
 export const inr = (n: number) =>
   "₹" + new Intl.NumberFormat("en-IN").format(n);
 
+/** Browsers only fire "storage" in OTHER tabs, so every hook announces its own
+ *  writes with this event. That keeps the Navbar badge, the Wishlist page and
+ *  the product hearts in step inside the same tab. */
+const SYNC_EVENT = "izha-store-sync";
+
 /** localStorage-backed state. `ready` turns true after the first read. */
 export function useStored<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(initial);
   const [ready, setReady] = useState(false);
+  // Last raw string this hook has read from, or written to, localStorage.
+  // Comparing against it is what stops two hooks echoing each other forever.
+  const lastRaw = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -73,6 +81,8 @@ export function useStored<T>(key: string, initial: T) {
       if (!active) return;
       try {
         const raw = localStorage.getItem(key);
+        if (raw === lastRaw.current) return;
+        lastRaw.current = raw;
         setValue(raw ? (JSON.parse(raw) as T) : initial);
       } catch {
         setValue(initial);
@@ -86,10 +96,15 @@ export function useStored<T>(key: string, initial: T) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === key) read();
     };
+    const onSync = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === key) read();
+    };
     window.addEventListener("storage", onStorage);
+    window.addEventListener(SYNC_EVENT, onSync);
     return () => {
       active = false;
       window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SYNC_EVENT, onSync);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -97,8 +112,12 @@ export function useStored<T>(key: string, initial: T) {
   useEffect(() => {
     if (!ready) return;
     try {
-      if (value === null) localStorage.removeItem(key);
-      else localStorage.setItem(key, JSON.stringify(value));
+      const raw = value === null ? null : JSON.stringify(value);
+      if (raw === lastRaw.current) return; // nothing new to save
+      lastRaw.current = raw;
+      if (raw === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, raw);
+      window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: key }));
     } catch {
       /* storage unavailable: keep working in memory */
     }

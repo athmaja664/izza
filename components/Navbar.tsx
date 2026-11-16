@@ -20,7 +20,7 @@ const ALWAYS_SHOW_BELOW = 80;
 /* WhatsApp chat link (country code 91 + number) */
 const WHATSAPP_URL =
   "https://wa.me/919995757612?text=" +
-  encodeURIComponent("Hi IZHA BLOOMS, I would like to know more about your collection.");
+  encodeURIComponent("Hi IZHA BLOOMS! I'm interested in your collection. Could you please assist me?");
 
 const OFFERS = [
   "Free shipping on orders above ₹999",

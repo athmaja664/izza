@@ -183,7 +183,9 @@ export default function AboutSection() {
             </Link>
 
             <a
-              href={`https://wa.me/${WHATSAPP}`}
+              href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                "Hi IZHA BLOOMS! I'm interested in your collection. Could you please assist me?"
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm underline underline-offset-4 transition-colors hover:text-[#B20947]"

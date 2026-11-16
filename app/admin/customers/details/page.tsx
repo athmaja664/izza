@@ -20,7 +20,27 @@ function CustomerDetailsInner() {
   const [customers] = useStored<DemoCustomer[]>(KEYS.customers, DEFAULT_CUSTOMERS);
   const [orders] = useStored<DemoOrder[]>(KEYS.orders, DEFAULT_ORDERS);
 
-  const customer = customers.find((c) => c.id === id) ?? customers[0];
+  const foundCustomer = customers.find((c) => c.id === id);
+  const matchedOrder = !foundCustomer
+    ? orders.find((o) => o.customerId === id || o.id === id)
+    : null;
+  const customer: DemoCustomer | null =
+    foundCustomer ??
+    (matchedOrder
+      ? {
+          id: matchedOrder.customerId,
+          name: matchedOrder.customerName,
+          email: matchedOrder.customerEmail,
+          phone: matchedOrder.customerPhone,
+          city: matchedOrder.city,
+          state: matchedOrder.state,
+          pincode: matchedOrder.pincode,
+          address: matchedOrder.address,
+          joinedAt: matchedOrder.createdAt.slice(0, 10),
+          source: "Direct",
+          savedAddresses: [],
+        }
+      : customers[0]);
 
   if (!customer) {
     return (

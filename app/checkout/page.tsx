@@ -36,6 +36,7 @@ import {
 } from "@/lib/demo-store";
 import { WhatsAppSvg } from "@/components/WhatsAppFloat";
 import AlertBox from "@/components/izha/AlertBox";
+import AuthModal from "@/components/izha/AuthModal";
 import {
   EmptyBlock,
   FlowerBadge,
@@ -66,6 +67,7 @@ export default function CheckoutPage() {
   );
 
   const [mode, setMode] = useState<CheckoutMode>("guest");
+  const [authModal, setAuthModal] = useState<"signin" | "register" | null>(null);
   const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
 
   const [name, setName] = useState(user?.name || defaultAddr?.name || "");
@@ -194,14 +196,35 @@ export default function CheckoutPage() {
       return;
     }
     const isMail = /^\S+@\S+\.\S+$/.test(id);
-    setUser({
-      name: name.trim() || (isMail ? id.split("@")[0] : "IZHA Circle Member"),
-      email: isMail ? id : email.trim(),
-      phone: !isMail ? id : phone.trim(),
+    const existingCust = customers.find(
+      (c) =>
+        (isMail && c.email.toLowerCase() === id.toLowerCase()) ||
+        (!isMail && c.phone === id)
+    );
+    const resolvedName =
+      existingCust?.name ||
+      name.trim() ||
+      (isMail ? id.split("@")[0] : "IZHA Circle Member");
+    const resolvedEmail = isMail ? id : existingCust?.email || email.trim();
+    const resolvedPhone = !isMail ? id : existingCust?.phone || phone.trim();
+
+    const loggedUser: AppUser = {
+      name: resolvedName,
+      email: resolvedEmail,
+      phone: resolvedPhone,
       role: "customer",
-    });
-    if (!isMail && !phone) setPhone(id);
-    if (isMail && !email) setEmail(id);
+    };
+    setUser(loggedUser);
+    setName(resolvedName);
+    if (resolvedEmail) setEmail(resolvedEmail);
+    if (resolvedPhone) setPhone(resolvedPhone);
+    if (existingCust) {
+      if (existingCust.address) setAddress(existingCust.address);
+      if (existingCust.city) setCity(existingCust.city);
+      if (existingCust.pincode) setPincode(existingCust.pincode);
+      if (existingCust.state) setStateName(existingCust.state);
+    }
+    setMode("signin");
     setAuthNote("Signed in! Your details are ready for checkout.");
   };
 
@@ -235,25 +258,45 @@ export default function CheckoutPage() {
     setError("");
     const orderNumber = `IZB-${1007 + orders.length}`;
     const existingCustomer = customers.find(
-      (c) => c.phone === phone.trim() || (email.trim() && c.email === email.trim())
+      (c) =>
+        (phone.trim() && c.phone === phone.trim()) ||
+        (email.trim() && c.email.toLowerCase() === email.trim().toLowerCase())
     );
-    const customerId = existingCustomer?.id ?? `cust-${Date.now()}`;
 
-    if (!existingCustomer) {
-      const newCustomer: DemoCustomer = {
-        id: customerId,
-        name: name.trim(),
-        email: email.trim() || "guest@izhablooms.in",
-        phone: phone.trim(),
-        city: city.trim(),
-        state: stateName.trim() || pinResult.region,
-        pincode: pincode.trim(),
-        address: address.trim(),
-        joinedAt: new Date().toISOString().slice(0, 10),
-        source: "Direct",
-        savedAddresses: [],
-      };
-      setCustomers((prev) => [newCustomer, ...prev]);
+    let customerId: string;
+    if (mode === "guest") {
+      // Guest Checkout: do NOT create a permanent customer account
+      customerId = existingCustomer?.id ?? `guest-${Date.now()}`;
+    } else {
+      // Registered customer / new registration: associate with permanent customer account
+      customerId = existingCustomer?.id ?? `cust-${Date.now()}`;
+      if (!existingCustomer) {
+        const newCustomer: DemoCustomer = {
+          id: customerId,
+          name: name.trim(),
+          email: email.trim() || `${phone.trim()}@izhablooms.in`,
+          phone: phone.trim(),
+          city: city.trim(),
+          state: stateName.trim() || pinResult.region,
+          pincode: pincode.trim(),
+          address: address.trim(),
+          joinedAt: new Date().toISOString().slice(0, 10),
+          source: "Direct",
+          savedAddresses: [
+            {
+              id: `addr-${Date.now()}`,
+              label: "Default",
+              name: name.trim(),
+              phone: phone.trim(),
+              line: address.trim(),
+              city: city.trim(),
+              pincode: pincode.trim(),
+              isDefault: true,
+            },
+          ],
+        };
+        setCustomers((prev) => [newCustomer, ...prev]);
+      }
     }
 
     const newOrder: DemoOrder = {
@@ -262,7 +305,9 @@ export default function CheckoutPage() {
       customerId,
       customerName: name.trim(),
       customerPhone: phone.trim(),
-      customerEmail: email.trim() || "guest@izhablooms.in",
+      customerEmail:
+        email.trim() ||
+        (mode === "guest" ? "guest@izhablooms.in" : `${phone.trim()}@izhablooms.in`),
       address: address.trim(),
       city: city.trim(),
       state: stateName.trim() || pinResult.region,
@@ -351,7 +396,7 @@ export default function CheckoutPage() {
     <PageShell>
       <PageTitle
         title="Checkout"
-        sub="Complete your order as a guest, sign in with OTP, or join IZHA Circle."
+        sub="Complete your order as a guest, sign in to your account, or join the IZHA Circle."
       />
 
       {ready && cart.length === 0 && (
@@ -368,14 +413,30 @@ export default function CheckoutPage() {
             {/* 3 Checkout Options */}
             <section className={`${card} p-5 sm:p-6`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B5607A]">
-                Step 1 · Choose How You Would Like to Checkout
+                STEP 1 · CHOOSE HOW YOU WOULD LIKE TO CHECKOUT
               </p>
-              <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {(
                   [
-                    { id: "guest", label: "Continue as Guest", sub: "No account required" },
-                    { id: "signin", label: "Sign In", sub: user ? `Signed in: ${user.name}` : "Email / Mobile & Password" },
-                    { id: "register", label: "Create an Account", sub: "Join IZHA Circle" },
+                    {
+                      id: "guest",
+                      label: "Continue as Guest",
+                      sub: "Quick checkout. No account required.",
+                    },
+                    {
+                      id: "signin",
+                      label: "Sign In",
+                      sub: user
+                        ? `Signed in as ${user.name}`
+                        : "For existing IZHA Blooms customers.",
+                    },
+                    {
+                      id: "register",
+                      label: "Create an Account",
+                      sub: user
+                        ? `Account: ${user.name}`
+                        : "Join the IZHA Circle and enjoy member privileges.",
+                    },
                   ] as const
                 ).map((opt) => {
                   const active = mode === opt.id;
@@ -383,69 +444,150 @@ export default function CheckoutPage() {
                     <button
                       key={opt.id}
                       type="button"
-                      onClick={() => setMode(opt.id)}
-                      className={`rounded-xl border p-3.5 text-left transition-colors ${focusRing} ${
+                      onClick={() => {
+                        setMode(opt.id);
+                        if (opt.id === "signin" && !user) {
+                          setAuthModal("signin");
+                        } else if (opt.id === "register" && !user) {
+                          setAuthModal("register");
+                        }
+                      }}
+                      className={`flex flex-col justify-between rounded-xl border p-4 text-left transition-all ${focusRing} ${
                         active
-                          ? "border-[#B20947] bg-[#FFF5F7]"
+                          ? "border-[#B20947] bg-[#FFF5F7] shadow-sm ring-1 ring-[#B20947]/30"
                           : "border-[#E8CFD2] bg-[#FCF8F3] hover:border-[#E99A9F]"
                       }`}
                     >
-                      <p className={`text-[13px] font-semibold ${active ? "text-[#B20947]" : "text-[#332B2B]"}`}>
-                        {opt.label}
+                      <div>
+                        <span
+                          className={`text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                            active ? "text-[#B20947]" : "text-[#B5607A]"
+                          }`}
+                        >
+                          Option {opt.id === "guest" ? "1" : opt.id === "signin" ? "2" : "3"}
+                        </span>
+                        <p
+                          className={`mt-1 text-[14px] font-semibold leading-snug ${
+                            active ? "text-[#B20947]" : "text-[#332B2B]"
+                          }`}
+                        >
+                          {opt.label}
+                        </p>
+                      </div>
+                      <p className="mt-2 text-[12px] leading-snug text-[#6f6565]">
+                        {opt.sub}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-[#6f6565]">{opt.sub}</p>
                     </button>
                   );
                 })}
               </div>
 
+              {/* Status or action banner according to mode */}
+              {mode === "guest" && (
+                <div className="mt-4 rounded-xl border border-[#E8CFD2] bg-[#FFF9F4] p-3.5 text-[13px] text-[#6f6565]">
+                  <p>
+                    Checking out as a <strong className="text-[#332B2B]">Guest</strong>. No account required. Fill in your delivery details below to proceed.
+                  </p>
+                </div>
+              )}
+
               {mode === "signin" && !user && (
                 <div className="mt-4 rounded-xl border border-[#E8CFD2] bg-[#FCF8F3] p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-[13px] font-medium text-[#332B2B]">
-                      Sign in with your account (or open full Sign-in page)
-                    </p>
-                    <Link
-                      href="/account?next=/checkout"
-                      className="text-[12px] font-medium text-[#B20947] underline underline-offset-4"
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#332B2B]">
+                        Sign in to your IZHA BLOOMS account
+                      </p>
+                      <p className="text-[12px] text-[#6f6565]">
+                        Access your saved addresses and order history.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAuthModal("signin")}
+                      className={`${solidBtn} shrink-0 py-2.5 text-[12px]`}
                     >
-                      Open Sign-In Modal
-                    </Link>
-                  </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                    <input
-                      className={inputCls}
-                      value={signinId}
-                      placeholder="Email or mobile number"
-                      onChange={(e) => setSigninId(e.target.value)}
-                    />
-                    <input
-                      type="password"
-                      className={inputCls}
-                      value={signinPassword}
-                      placeholder="Password"
-                      onChange={(e) => setSigninPassword(e.target.value)}
-                    />
-                    <button type="button" onClick={handleInlineSignin} className={outlineBtn}>
-                      Sign In
+                      Open Sign In Modal
                     </button>
                   </div>
-                  {authNote && (
-                    <AlertBox
-                      variant={authNote.startsWith("Signed in") ? "success" : "error"}
-                      message={authNote}
-                      onClose={() => setAuthNote("")}
-                      className="mt-3"
-                    />
-                  )}
+
+                  <div className="mt-4 border-t border-[#E8CFD2] pt-3">
+                    <p className="text-[12px] font-medium text-[#6f6565]">
+                      Or sign in directly below:
+                    </p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                      <input
+                        className={inputCls}
+                        value={signinId}
+                        placeholder="Email or mobile number"
+                        onChange={(e) => setSigninId(e.target.value)}
+                      />
+                      <input
+                        type="password"
+                        className={inputCls}
+                        value={signinPassword}
+                        placeholder="Password"
+                        onChange={(e) => setSigninPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleInlineSignin}
+                        className={outlineBtn}
+                      >
+                        Sign In
+                      </button>
+                    </div>
+                    {authNote && (
+                      <AlertBox
+                        variant={authNote.startsWith("Signed in") ? "success" : "error"}
+                        message={authNote}
+                        onClose={() => setAuthNote("")}
+                        className="mt-3"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {mode === "register" && !user && (
+                <div className="mt-4 rounded-xl border border-[#E8CFD2] bg-[#FCF8F3] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#332B2B]">
+                        Create your IZHA Circle account
+                      </p>
+                      <p className="text-[12px] text-[#6f6565]">
+                        Join for member privileges and smoother checkout.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAuthModal("register")}
+                      className={`${solidBtn} shrink-0 py-2.5 text-[12px]`}
+                    >
+                      Open Registration Modal
+                    </button>
+                  </div>
+                  <p className="mt-3 text-[12px] text-[#6f6565]">
+                    Or enter a password in the delivery details form below to automatically register while placing your order.
+                  </p>
                 </div>
               )}
 
               {user && (
-                <p className="mt-3 flex items-center gap-2 text-[13px] text-[#3f6a46]">
-                  <UserCheck size={16} />
-                  Checking out as <strong>{user.name}</strong>
-                </p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#3f6a46]/20 bg-[#F4F9F4] p-3 text-[13px] text-[#3f6a46]">
+                  <span className="flex items-center gap-2">
+                    <UserCheck size={16} />
+                    Signed in as <strong>{user.name}</strong> ({user.email || user.phone})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setUser(null)}
+                    className="text-[12px] font-medium text-[#B20947] underline underline-offset-2"
+                  >
+                    Switch account
+                  </button>
+                </div>
               )}
             </section>
 
@@ -787,7 +929,9 @@ export default function CheckoutPage() {
                   Safe &amp; Secure Checkout
                 </span>
                 <a
-                  href="https://wa.me/919995757612"
+                  href={`https://wa.me/919995757612?text=${encodeURIComponent(
+                    "Hi IZHA BLOOMS! I'm interested in your collection. Could you please assist me?"
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 font-medium text-[#B20947] hover:underline"
@@ -799,6 +943,32 @@ export default function CheckoutPage() {
             </div>
           </aside>
         </div>
+      )}
+
+      {authModal && (
+        <AuthModal
+          initialMode={authModal}
+          onDone={(u) => {
+            setUser(u);
+            if (u.name) setName(u.name);
+            if (u.email) setEmail(u.email);
+            if (u.phone) setPhone(u.phone);
+            const cust = customers.find(
+              (c) =>
+                (u.email && c.email.toLowerCase() === u.email.toLowerCase()) ||
+                (u.phone && c.phone === u.phone)
+            );
+            if (cust) {
+              if (cust.address) setAddress(cust.address);
+              if (cust.city) setCity(cust.city);
+              if (cust.pincode) setPincode(cust.pincode);
+              if (cust.state) setStateName(cust.state);
+            }
+            setMode(authModal === "register" ? "register" : "signin");
+            setAuthModal(null);
+          }}
+          onClose={() => setAuthModal(null)}
+        />
       )}
     </PageShell>
   );
