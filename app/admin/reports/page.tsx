@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Download, LogOut, ShoppingBag, Users } from "lucide-react";
-import AdminShell, { card, cardCream, inputCls, outlineBtn } from "@/components/admin/AdminShell";
+import AdminShell, { inputCls, outlineBtn } from "@/components/admin/AdminShell";
 import { serif } from "@/components/izha/ui";
 import {
   STAGES,
@@ -11,6 +11,8 @@ import {
   type StageType,
   type VisitEvent,
 } from "@/lib/visit-tracker";
+
+const CRIMSON = "#B20947";
 
 type Range = "7" | "30" | "all";
 
@@ -58,6 +60,54 @@ function sampleEvents(): VisitEvent[] {
     }
   }
   return out;
+}
+
+/* ---------- Layout pieces (same structure as the dashboard) ---------- */
+
+function StatCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="h-full rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 transition-colors hover:border-[#B20947]/40 sm:p-6">
+      <p className="m-0 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-black/50 sm:text-[11px] sm:tracking-[0.25em]">
+        {icon} {label}
+      </p>
+      <p
+        className={`${serif} lining-nums mb-0 mt-3 break-words text-[32px] font-medium leading-none sm:mt-4 sm:text-[46px]`}
+        style={{ color: CRIMSON }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  note,
+  className = "",
+  children,
+}: {
+  title: string;
+  note?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 sm:p-6 ${className}`}>
+      <h2 className={`${serif} m-0 text-[24px] font-medium sm:text-[28px]`} style={{ color: CRIMSON }}>
+        {title}
+      </h2>
+      {note && <p className="mb-0 mt-1 text-[12px] text-black/45">{note}</p>}
+      <div className="mt-4 sm:mt-5">{children}</div>
+    </section>
+  );
 }
 
 export default function AdminReportsPage() {
@@ -147,145 +197,181 @@ export default function AdminReportsPage() {
   };
 
   const statCards = [
-    { label: "Total visitors", value: total, icon: Users },
-    { label: "Placed an order", value: converted, icon: ShoppingBag },
-    { label: "Dropped off", value: dropped, icon: LogOut },
-    { label: "Conversion rate", value: `${convRate}%`, icon: ShoppingBag },
+    { label: "Total visitors", value: String(total), icon: <Users size={14} /> },
+    { label: "Placed an order", value: String(converted), icon: <ShoppingBag size={14} /> },
+    { label: "Dropped off", value: String(dropped), icon: <LogOut size={14} /> },
+    { label: "Conversion rate", value: `${convRate}%`, icon: <ShoppingBag size={14} /> },
   ];
 
-  return (
-    <AdminShell
-      title="Visitor Reports"
-      subtitle="See who visited the store and where they dropped off before buying"
+  const statusPill = (r: SessionRow) => (
+    <span
+      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+        r.converted ? "bg-[#eef7f0] text-[#3a6b42]" : "bg-[#FFF5F7] text-[#B20947]"
+      }`}
     >
-      {/* Filters */}
-      <div className={`${card} mb-5 flex flex-wrap items-center gap-3 p-4`}>
-        <select
-          value={range}
-          onChange={(e) => setRange(e.target.value as Range)}
-          className={`${inputCls} !w-auto !py-2 !text-[13px]`}
-        >
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="all">All time</option>
-        </select>
+      {r.converted ? "Placed order" : `Dropped after: ${STAGES[r.reached].label}`}
+    </span>
+  );
 
-        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[#332B2B]">
-          <input
-            type="checkbox"
-            checked={onlyDropped}
-            onChange={(e) => setOnlyDropped(e.target.checked)}
-            className="h-4 w-4 accent-[#B20947]"
-          />
-          Show only drop-offs
-        </label>
+  return (
+    <AdminShell title="Visitor Reports">
+      {/* Heading block */}
+      <h2
+        className={`${serif} mb-2 mt-0 break-words font-medium leading-tight`}
+        style={{ color: CRIMSON, fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
+      >
+        Visitor Reports
+      </h2>
+      <p className="mb-6 mt-0 text-[14px] text-black/60 sm:text-[15px] md:mb-10">
+        See who visited the store and where they dropped off before buying
+      </p>
 
-        <div className="ml-auto flex flex-wrap gap-2">
-          <button type="button" onClick={exportCsv} className={`${outlineBtn} gap-1.5`}>
-            <Download size={14} /> Export CSV
-          </button>
-          {events.length === 0 && (
-            <button
-              type="button"
-              onClick={() => writeEvents(sampleEvents())}
-              className={outlineBtn}
-            >
-              Load sample data
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Stat cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {statCards.map(({ label, value, icon: Icon }) => (
-          <div key={label} className={`${card} p-4`}>
-            <Icon size={18} className="text-[#B20947]" />
-            <p className={`${serif} mt-2 text-[28px] font-medium text-[#332B2B]`}>{value}</p>
-            <p className="text-[12px] text-[#6f6565]">{label}</p>
-          </div>
+      {/* Counts: two per row on phones */}
+      <section aria-label="Visitor counts" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {statCards.map((s) => (
+          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} />
         ))}
+      </section>
+
+      {/* Filters */}
+      <div className="mt-4 sm:mt-6">
+        <Panel title="Filters" note="Date range, drop-offs and export">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <select
+              value={range}
+              onChange={(e) => setRange(e.target.value as Range)}
+              className={`${inputCls} w-full !py-2 !text-[13px] sm:!w-auto`}
+            >
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All time</option>
+            </select>
+
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[#332B2B]">
+              <input
+                type="checkbox"
+                checked={onlyDropped}
+                onChange={(e) => setOnlyDropped(e.target.checked)}
+                className="h-4 w-4 accent-[#B20947]"
+              />
+              Show only drop-offs
+            </label>
+
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
+              <button type="button" onClick={exportCsv} className={`${outlineBtn} gap-1.5`}>
+                <Download size={14} /> Export CSV
+              </button>
+              {events.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => writeEvents(sampleEvents())}
+                  className={outlineBtn}
+                >
+                  Load sample data
+                </button>
+              )}
+            </div>
+          </div>
+        </Panel>
       </div>
 
       {/* Funnel */}
-      <section className={`${card} mb-6 p-4 sm:p-5`}>
-        <h2 className={`${serif} text-[22px] font-medium text-[#332B2B]`}>Where visitors drop off</h2>
-        <div className="mt-4 space-y-3">
-          {funnel.map((s, i) => {
-            const pct = total ? Math.round((s.count / total) * 100) : 0;
-            const lost = i > 0 ? funnel[i - 1].count - s.count : 0;
-            return (
-              <div key={s.type}>
-                <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-[13px]">
-                  <span className="font-medium text-[#332B2B]">{s.label}</span>
-                  <span className="text-[#6f6565]">
-                    {s.count} visitors ({pct}%)
-                    {i > 0 && lost > 0 && (
-                      <span className="ml-2 font-semibold text-[#B20947]">−{lost} left here</span>
-                    )}
-                  </span>
+      <div className="mt-3 sm:mt-4">
+        <Panel title="Where visitors drop off">
+          <div className="space-y-4">
+            {funnel.map((s, i) => {
+              const pct = total ? Math.round((s.count / total) * 100) : 0;
+              const lost = i > 0 ? funnel[i - 1].count - s.count : 0;
+              return (
+                <div key={s.type}>
+                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[13px]">
+                    <span className="font-medium text-[#332B2B]">{s.label}</span>
+                    <span className="lining-nums text-black/55">
+                      {s.count} visitors ({pct}%)
+                      {i > 0 && lost > 0 && (
+                        <span className="ml-2 font-semibold" style={{ color: CRIMSON }}>
+                          −{lost} left here
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#F6DADD]">
+                    <div
+                      className="h-2 rounded-full"
+                      style={{ width: `${pct}%`, background: CRIMSON }}
+                    />
+                  </div>
                 </div>
-                <div className="h-3 overflow-hidden rounded-full bg-[#F9E3E9]">
-                  <div
-                    className="h-full rounded-full bg-[#B20947]"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Visitor table */}
-      <section className="space-y-3">
-        <h2 className={`${serif} text-[22px] font-medium text-[#332B2B]`}>
-          Visitor details ({shown.length})
-        </h2>
-
-        {shown.length === 0 && (
-          <div className={`${cardCream} p-8 text-center text-[14px] text-[#6f6565]`}>
-            No visitor data yet. Once customers browse the store, they will appear here.
+              );
+            })}
           </div>
-        )}
+        </Panel>
+      </div>
 
-        {shown.length > 0 && (
-          <div className={`${card} overflow-x-auto`}>
-            <table className="w-full min-w-[720px] text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[#F3E3E8] text-[#6f6565]">
-                  <th className="p-3 font-medium">Visitor</th>
-                  <th className="p-3 font-medium">Last seen</th>
-                  <th className="p-3 font-medium">Last page</th>
-                  <th className="p-3 font-medium">Last product</th>
-                  <th className="p-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
+      {/* Visitor details */}
+      <div className="mt-3 sm:mt-4">
+        <Panel title={`Visitor details (${shown.length})`}>
+          {shown.length === 0 ? (
+            <p className="m-0 text-[14px] text-black/55">
+              No visitor data yet. Once customers browse the store, they will appear here.
+            </p>
+          ) : (
+            <>
+              {/* Phones: one card per visitor */}
+              <ul className="m-0 flex list-none flex-col gap-3 p-0 md:hidden">
                 {shown.map((r) => (
-                  <tr key={r.sessionId} className="border-b border-[#F9EEF1] last:border-0">
-                    <td className="p-3 font-medium text-[#332B2B]">{r.customerName}</td>
-                    <td className="p-3 text-[#6f6565]">{fmt(r.lastSeen)}</td>
-                    <td className="p-3 text-[#6f6565]">{r.lastPage}</td>
-                    <td className="p-3 text-[#6f6565]">{r.lastProduct}</td>
-                    <td className="p-3">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                          r.converted
-                            ? "bg-[#eef7f0] text-[#3a6b42]"
-                            : "bg-[#FFF5F7] text-[#B20947]"
-                        }`}
-                      >
-                        {r.converted ? "Placed order" : `Dropped after: ${STAGES[r.reached].label}`}
+                  <li
+                    key={r.sessionId}
+                    className="min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FFFBF5] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="m-0 min-w-0 break-words text-[14px] font-semibold text-[#332B2B]">
+                        {r.customerName}
+                      </p>
+                      <span className="lining-nums shrink-0 text-[12px] text-black/55">
+                        {fmt(r.lastSeen)}
                       </span>
-                    </td>
-                  </tr>
+                    </div>
+                    <p className="m-0 mt-2 break-all text-[13px] text-black/60">
+                      Last page: {r.lastPage}
+                    </p>
+                    <p className="m-0 mt-0.5 break-words text-[13px] text-black/60">
+                      Last product: {r.lastProduct}
+                    </p>
+                    <div className="mt-3 border-t border-black/5 pt-3">{statusPill(r)}</div>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+              </ul>
+
+              {/* Tablets and larger: table */}
+              <div className="hidden overflow-x-auto rounded-sm border border-[#E8CFD2] bg-[#FFFBF5] md:block">
+                <table className="w-full min-w-[640px] text-left text-[13px]">
+                  <thead>
+                    <tr className="border-b border-black/5 text-[11px] uppercase tracking-[0.12em] text-black/50">
+                      <th className="p-3 font-medium">Visitor</th>
+                      <th className="p-3 font-medium">Last seen</th>
+                      <th className="p-3 font-medium">Last page</th>
+                      <th className="p-3 font-medium">Last product</th>
+                      <th className="p-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map((r) => (
+                      <tr key={r.sessionId} className="border-b border-black/5 last:border-0">
+                        <td className="p-3 font-medium text-[#332B2B]">{r.customerName}</td>
+                        <td className="lining-nums p-3 text-black/55">{fmt(r.lastSeen)}</td>
+                        <td className="p-3 text-black/55">{r.lastPage}</td>
+                        <td className="p-3 text-black/55">{r.lastProduct}</td>
+                        <td className="p-3">{statusPill(r)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </Panel>
+      </div>
     </AdminShell>
   );
 }

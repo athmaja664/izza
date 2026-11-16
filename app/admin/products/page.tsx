@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -22,6 +23,9 @@ import {
   serif,
   solidBtn,
 } from "@/components/izha/ui";
+
+const CRIMSON = "#B20947";
+const LOW_STOCK = 5;
 
 const CATEGORY_OPTIONS: { name: CategoryName; slug: CategorySlug }[] = [
   { name: "Dresses", slug: "dresses" },
@@ -70,6 +74,55 @@ const EMPTY_FORM: ProductFormState = {
   isNew: true,
 };
 
+/* ---------- Layout pieces (same structure as the dashboard) ---------- */
+
+function StatCard({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div className="h-full rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 transition-colors hover:border-[#B20947]/40 sm:p-6">
+      <p className="m-0 text-[10px] uppercase tracking-[0.15em] text-black/50 sm:text-[11px] sm:tracking-[0.25em]">
+        {label}
+      </p>
+      <p
+        className={`${serif} lining-nums mb-0 mt-3 break-words text-[32px] font-medium leading-none sm:mt-4 sm:text-[46px]`}
+        style={{ color: CRIMSON }}
+      >
+        {value}
+      </p>
+      {note && <p className="mb-0 mt-2 text-[11px] text-black/45 sm:mt-3 sm:text-[12px]">{note}</p>}
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  note,
+  className = "",
+  children,
+}: {
+  title: string;
+  note?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 sm:p-6 ${className}`}>
+      <h2 className={`${serif} m-0 text-[24px] font-medium sm:text-[28px]`} style={{ color: CRIMSON }}>
+        {title}
+      </h2>
+      {note && <p className="mb-0 mt-1 text-[12px] text-black/45">{note}</p>}
+      <div className="mt-4 sm:mt-5">{children}</div>
+    </section>
+  );
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useStored<AdminProduct[]>(
     KEYS.adminProducts,
@@ -99,6 +152,12 @@ export default function AdminProductsPage() {
       );
     });
   }, [products, search, catFilter]);
+
+  const stats = useMemo(() => {
+    const lowStock = products.filter((p) => p.stock > 0 && p.stock <= LOW_STOCK).length;
+    const outOfStock = products.filter((p) => p.stock <= 0).length;
+    return { lowStock, outOfStock };
+  }, [products]);
 
   const openCreate = () => {
     setForm(EMPTY_FORM);
@@ -276,7 +335,7 @@ export default function AdminProductsPage() {
         soldCount: 0,
         sizes: form.sizes,
         soldOutSizes: form.soldOutSizes,
-                ...({ sizeChart: chart } as object),
+        ...({ sizeChart: chart } as object),
         image: form.image.trim() || "/images/kurtas1.jpg",
         gallery: [form.image.trim() || "/images/kurtas1.jpg"],
         isNew: form.isNew,
@@ -320,13 +379,23 @@ export default function AdminProductsPage() {
   return (
     <AdminShell
       title="Products & Inventory"
-      subtitle="Add, edit, delete products, manage stock, colours, and sizes (XS–XXXL or number sizes like 34, 36, 38)"
       actions={
         <button type="button" onClick={openCreate} className={`${solidBtn} gap-1.5`}>
           <Plus size={16} /> Add Product
         </button>
       }
     >
+      {/* Heading block */}
+      <h2
+        className={`${serif} mb-2 mt-0 break-words font-medium leading-tight`}
+        style={{ color: CRIMSON, fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
+      >
+        Products &amp; Inventory
+      </h2>
+      <p className="mb-6 mt-0 text-[14px] text-black/60 sm:text-[15px] md:mb-10">
+        Add, edit, delete products, manage stock, colours, and sizes (XS–XXXL or number sizes like 34, 36, 38)
+      </p>
+
       {/* Product action alert box */}
       {notice && (
         <AlertBox
@@ -337,150 +406,173 @@ export default function AdminProductsPage() {
         />
       )}
 
-      {/* Filters bar */}
-      <div className={`${card} flex flex-col gap-3 p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between`}>
-        <div className="relative w-full lg:min-w-[220px] lg:flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F3057]"
-          />
-          <input
-            className={`${inputCls} !pl-10`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products by name, category or shade..."
-          />
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {["All", ...CATEGORY_OPTIONS.map((c) => c.name)].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCatFilter(cat)}
-              className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:px-3.5 sm:text-[12px] ${
-                catFilter === cat
-                  ? "border-[#B20947] bg-[#F8EAE4] text-[#B20947]"
-                  : "border-[#E8B8C5] bg-[#FAF3E8] text-[#332B2B] hover:border-[#B20947]"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      {/* Counts: two per row on phones */}
+      <section aria-label="Product counts" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <StatCard label="Products" value={String(products.length)} note="Catalog styles" />
+        <StatCard label="Showing" value={String(filtered.length)} note="Matching your filters" />
+        <StatCard label="Low stock" value={String(stats.lowStock)} note={`${LOW_STOCK} or fewer left`} />
+        <StatCard label="Out of stock" value={String(stats.outOfStock)} note="Needs restocking" />
+      </section>
+
+      {/* Filters */}
+      <div className="mt-4 sm:mt-6">
+        <Panel title="Search & filter" note="By name, category or shade">
+          <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+            <div className="relative w-full lg:min-w-[220px] lg:flex-1">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F3057]"
+              />
+              <input
+                className={`${inputCls} !pl-10`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search products by name, category or shade..."
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {["All", ...CATEGORY_OPTIONS.map((c) => c.name)].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCatFilter(cat)}
+                  className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:px-3.5 sm:text-[12px] ${
+                    catFilter === cat
+                      ? "border-[#B20947] bg-[#F8EAE4] text-[#B20947]"
+                      : "border-[#E8B8C5] bg-[#FAF3E8] text-[#332B2B] hover:border-[#B20947]"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Panel>
       </div>
 
       {/* Product list */}
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((p) => {
-          const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
-          return (
-            <div key={p.id} className={`${card} flex min-w-0 flex-col justify-between p-4`}>
-              <div className="flex gap-3.5">
-                <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-[#E8B8C5] bg-[#FFF5F7]">
-                  <Image
-                    src={p.image}
-                    alt={p.name}
-                    fill
-                    sizes="80px"
-                    unoptimized={p.image.startsWith("data:")}
-                    className="object-cover"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B5607A]">
-                    {p.category} · {p.color}
-                  </p>
-                  <h2 className="mt-0.5 line-clamp-2 text-[15px] font-semibold text-[#332B2B]">
-                    {p.name}
-                  </h2>
-                  <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-[14px] font-semibold text-[#332B2B]">
-                    {inr(p.price)}
-                    <span className="text-[12px] font-normal text-[#9b9090] line-through">
-                      {inr(p.mrp)}
-                    </span>
-                    {discount > 0 && (
-                      <span className="rounded bg-[#F9E3E9] px-1.5 py-0.5 text-[10px] text-[#B20947]">
-                        {discount}% OFF
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
+      <div className="mt-3 sm:mt-4">
+        <Panel title="All products" note={`${filtered.length} ${filtered.length === 1 ? "style" : "styles"}`}>
+          {filtered.length === 0 ? (
+            <p className="m-0 text-[14px] text-black/55">No products found.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+              {filtered.map((p) => {
+                const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+                return (
+                  <div
+                    key={p.id}
+                    className="flex min-w-0 flex-col justify-between rounded-sm border border-[#E8CFD2] bg-[#FFFBF5] p-4"
+                  >
+                    <div className="flex gap-3.5">
+                      <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-sm border border-[#E8B8C5] bg-[#FFF5F7]">
+                        <Image
+                          src={p.image}
+                          alt={p.name}
+                          fill
+                          sizes="80px"
+                          unoptimized={p.image.startsWith("data:")}
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#B5607A]">
+                          {p.category} · {p.color}
+                        </p>
+                        <h3 className="m-0 mt-1 line-clamp-2 text-[15px] font-semibold text-[#332B2B]">
+                          {p.name}
+                        </h3>
+                        <p className="lining-nums m-0 mt-1 flex flex-wrap items-baseline gap-1.5 text-[14px] font-semibold text-[#332B2B]">
+                          {inr(p.price)}
+                          <span className="text-[12px] font-normal text-[#9b9090] line-through">
+                            {inr(p.mrp)}
+                          </span>
+                          {discount > 0 && (
+                            <span className="rounded bg-[#F9E3E9] px-1.5 py-0.5 text-[10px] text-[#B20947]">
+                              {discount}% OFF
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Sizes */}
-              <div className="mt-3 border-t border-[#E8CFD2] pt-3">
-                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#6f6565]">
-                  Active Sizes ({p.sizes.length})
-                </p>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {p.sizes.map((s) => (
-                    <span
-                      key={s}
-                      className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${
-                        (p.soldOutSizes ?? []).includes(s)
-                          ? "border-[#e3d9d9] text-[#9b9090] line-through"
-                          : "border-[#E8B8C5] bg-[#EFE2CE] text-[#332B2B]"
-                      }`}
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                    {/* Sizes */}
+                    <div className="mt-3 border-t border-black/5 pt-3">
+                      <p className="m-0 text-[10px] font-medium uppercase tracking-[0.15em] text-black/50">
+                        Active Sizes ({p.sizes.length})
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {p.sizes.map((s) => (
+                          <span
+                            key={s}
+                            className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                              (p.soldOutSizes ?? []).includes(s)
+                                ? "border-[#e3d9d9] text-[#9b9090] line-through"
+                                : "border-[#E8B8C5] bg-[#EFE2CE] text-[#332B2B]"
+                            }`}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
 
-              {/* Stock + Actions */}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#E8CFD2] pt-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-[#6f6565]">Stock:</span>
-                  <button
-                    type="button"
-                    onClick={() => updateStock(p.id, -1)}
-                    className="h-7 w-7 rounded-full border border-[#E8B8C5] bg-[#FAF3E8] text-[13px] font-semibold hover:bg-[#EFE2CE]"
-                  >
-                    -
-                  </button>
-                  <span
-                    className={`min-w-6 text-center text-[13px] font-semibold ${
-                      p.stock === 0
-                        ? "text-[#B20947]"
-                        : p.stock <= 5
-                        ? "text-[#b5607a]"
-                        : "text-[#3a6b42]"
-                    }`}
-                  >
-                    {p.stock}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => updateStock(p.id, 1)}
-                    className="h-7 w-7 rounded-full border border-[#E8B8C5] bg-[#FAF3E8] text-[13px] font-semibold hover:bg-[#EFE2CE]"
-                  >
-                    +
-                  </button>
-                </div>
+                    {/* Stock + Actions */}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-black/5 pt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] text-black/55">Stock:</span>
+                        <button
+                          type="button"
+                          onClick={() => updateStock(p.id, -1)}
+                          className="h-7 w-7 rounded-full border border-[#E8B8C5] bg-[#FAF3E8] text-[13px] font-semibold hover:bg-[#EFE2CE]"
+                        >
+                          -
+                        </button>
+                        <span
+                          className={`lining-nums min-w-6 text-center text-[13px] font-semibold ${
+                            p.stock === 0
+                              ? "text-[#B20947]"
+                              : p.stock <= 5
+                              ? "text-[#b5607a]"
+                              : "text-[#3a6b42]"
+                          }`}
+                        >
+                          {p.stock}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateStock(p.id, 1)}
+                          className="h-7 w-7 rounded-full border border-[#E8B8C5] bg-[#FAF3E8] text-[13px] font-semibold hover:bg-[#EFE2CE]"
+                        >
+                          +
+                        </button>
+                      </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(p)}
-                    aria-label={`Edit ${p.name}`}
-                    className={`inline-flex items-center gap-1 rounded-lg border border-[#E8B8C5] bg-[#FAF3E8] px-2.5 py-1.5 text-[12px] font-medium text-[#332B2B] hover:border-[#B20947] hover:text-[#B20947] ${focusRing}`}
-                  >
-                    <Edit3 size={13} /> Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteProduct(p.id)}
-                    aria-label={`Delete ${p.name}`}
-                    className={`inline-flex items-center gap-1 rounded-lg border border-[#F9E3E9] bg-[#FFF5F7] px-2.5 py-1.5 text-[12px] font-medium text-[#B20947] hover:bg-[#F9E3E9] ${focusRing}`}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(p)}
+                          aria-label={`Edit ${p.name}`}
+                          className={`inline-flex items-center gap-1 rounded-lg border border-[#E8B8C5] bg-[#FAF3E8] px-2.5 py-1.5 text-[12px] font-medium text-[#332B2B] hover:border-[#B20947] hover:text-[#B20947] ${focusRing}`}
+                        >
+                          <Edit3 size={13} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteProduct(p.id)}
+                          aria-label={`Delete ${p.name}`}
+                          className={`inline-flex items-center gap-1 rounded-lg border border-[#F9E3E9] bg-[#FFF5F7] px-2.5 py-1.5 text-[12px] font-medium text-[#B20947] hover:bg-[#F9E3E9] ${focusRing}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          )}
+        </Panel>
       </div>
 
       {/* Add / Edit Modal */}

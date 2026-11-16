@@ -11,8 +11,54 @@ import {
   type DemoCustomer,
   type DemoOrder,
 } from "@/lib/demo-store";
-import AdminShell, { card, cardCream, outlineBtn } from "@/components/admin/AdminShell";
+import AdminShell, { card, outlineBtn } from "@/components/admin/AdminShell";
 import { serif } from "@/components/izha/ui";
+
+const CRIMSON = "#B20947";
+
+/* ---------- Layout pieces (same structure as the dashboard) ---------- */
+
+function Panel({
+  title,
+  className = "",
+  children,
+}: {
+  title?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FAF1E4] p-4 sm:p-6 ${className}`}>
+      {title && (
+        <h2
+          className={`${serif} m-0 flex items-center gap-2 text-[22px] font-medium sm:text-[28px]`}
+          style={{ color: CRIMSON }}
+        >
+          {title}
+        </h2>
+      )}
+      <div className={title ? "mt-4 sm:mt-5" : ""}>{children}</div>
+    </section>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="h-full min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FFFBF5] p-4 sm:p-5">
+      <p className="m-0 text-[10px] uppercase tracking-[0.15em] text-black/50 sm:text-[11px] sm:tracking-[0.25em]">
+        {label}
+      </p>
+      <p
+        className={`${serif} lining-nums mb-0 mt-3 break-words font-medium leading-none ${
+          value.startsWith("₹") ? "text-[22px] sm:text-[30px]" : "text-[30px] sm:text-[38px]"
+        }`}
+        style={{ color: CRIMSON }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 function CustomerDetailsInner() {
   const searchParams = useSearchParams();
@@ -57,99 +103,99 @@ function CustomerDetailsInner() {
   const totalSpent = customerOrders.reduce((s, o) => s + o.total, 0);
 
   return (
-    <div className="space-y-6">
+    <div>
       <Link
         href="/admin/customers"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#B20947] hover:underline"
+        className="inline-flex items-center gap-1.5 py-1 text-[12px] uppercase tracking-[0.15em] underline underline-offset-4"
+        style={{ color: CRIMSON }}
       >
         <ArrowLeft size={15} /> Back to All Customers
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
-        {/* Customer Profile Card */}
-        <section className={`${card} min-w-0 p-4 sm:p-6`}>
-          <div className="flex items-center gap-3.5 border-b border-[#E8CFD2] pb-4 sm:gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-[1fr_1.5fr]">
+        {/* Customer profile */}
+        <Panel>
+          <div className="flex items-center gap-3.5 border-b border-black/5 pb-4 sm:gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#E8B8C5] bg-[#FFF5F7] text-[22px] font-semibold text-[#B20947] sm:h-14 sm:w-14 sm:text-[24px]">
               {customer.name.charAt(0)}
             </span>
             <div className="min-w-0">
-              <h2 className={`${serif} truncate text-[24px] font-medium leading-none text-[#332B2B] sm:text-[28px]`}>
+              <h2
+                className={`${serif} m-0 break-words text-[24px] font-medium leading-tight sm:text-[28px]`}
+                style={{ color: CRIMSON }}
+              >
                 {customer.name}
               </h2>
-              <p className="mt-1 text-[12px] text-[#6f6565]">
-                Joined {customer.joinedAt} · Source: <strong>{customer.source}</strong>
-              </p>
+              <p className="lining-nums m-0 mt-1 text-[12px] text-black/55">Joined {customer.joinedAt}</p>
             </div>
           </div>
 
           <div className="mt-4 space-y-3 text-[14px]">
-            <p className="flex items-center gap-2.5 text-[#332B2B]">
+            <p className="m-0 flex items-center gap-2.5 text-[#332B2B]">
               <Phone size={16} className="shrink-0 text-[#B20947]" />
-              <span className="tabular-nums leading-snug">+91 {customer.phone}</span>
+              <span className="lining-nums leading-snug">+91 {customer.phone}</span>
             </p>
-            <p className="flex min-w-0 items-center gap-2.5 text-[#332B2B]">
+            <p className="m-0 flex min-w-0 items-center gap-2.5 text-[#332B2B]">
               <Mail size={16} className="shrink-0 text-[#B20947]" />
               <span className="break-all leading-snug">{customer.email}</span>
             </p>
-            <p className="flex items-start gap-2.5 text-[#6f6565]">
+            <p className="m-0 flex items-start gap-2.5 text-black/60">
               <MapPin size={16} className="mt-0.5 shrink-0 text-[#B20947]" />
-              <span className="leading-snug">
+              <span className="break-words leading-snug">
                 {customer.address}, {customer.city}, {customer.state} —{" "}
-                <span className="tabular-nums">{customer.pincode}</span>
+                <span className="lining-nums">{customer.pincode}</span>
               </span>
             </p>
           </div>
 
-          <div className={`${cardCream} mt-5 grid grid-cols-2 gap-3 p-4 text-center`}>
-            <div>
-              <p className={`${serif} lining-nums tabular-nums text-[28px] font-semibold leading-tight text-[#B20947]`}>
-                {customerOrders.length}
-              </p>
-              <p className="text-[12px] text-[#6f6565]">Total Orders</p>
-            </div>
-            <div>
-              <p className={`${serif} lining-nums tabular-nums text-[28px] font-semibold leading-tight text-[#332B2B]`}>
-                {inr(totalSpent)}
-              </p>
-              <p className="text-[12px] text-[#6f6565]">Lifetime Spend</p>
-            </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <StatCard label="Total Orders" value={String(customerOrders.length)} />
+            <StatCard label="Lifetime Spend" value={inr(totalSpent)} />
           </div>
-        </section>
+        </Panel>
 
-        {/* Customer Order History */}
-        <section className={`${card} p-5 sm:p-6`}>
-          <h2 className={`${serif} flex items-center gap-2 text-[24px] font-medium text-[#332B2B]`}>
-            <ShoppingBag size={20} className="text-[#B20947]" />
-            Order History ({customerOrders.length})
-          </h2>
-
+        {/* Order history */}
+        <Panel
+          title={
+            <>
+              <ShoppingBag size={20} />
+              Order History ({customerOrders.length})
+            </>
+          }
+        >
           {customerOrders.length === 0 ? (
-            <p className="mt-4 text-[14px] text-[#6f6565]">No orders recorded yet.</p>
+            <p className="m-0 text-[14px] text-black/55">No orders recorded yet.</p>
           ) : (
-            <div className="mt-4 space-y-3">
+            <ul className="m-0 flex list-none flex-col gap-3 p-0">
               {customerOrders.map((ord) => (
-                <Link
-                  key={ord.id}
-                  href={`/admin/orders/details?id=${encodeURIComponent(ord.id)}`}
-                  className="block rounded-xl border border-[#DFCBB3] bg-[#EFE2CE] p-4 transition-colors hover:border-[#B20947] hover:bg-[#F8EAE4]"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="tabular-nums font-semibold text-[#B20947]">{ord.id}</span>
-                    <span className="rounded-full bg-[#FAF3E8] px-2.5 py-0.5 text-[11px] font-semibold text-[#332B2B]">
-                      {ord.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 tabular-nums text-[13px] text-[#6f6565]">
-                    {ord.createdAt} · {ord.paymentMethod} ({ord.paymentStatus})
-                  </p>
-                  <p className="mt-1.5 tabular-nums text-[14px] font-semibold text-[#332B2B]">
-                    Total: {inr(ord.total)} · {ord.items.map((i) => `${i.name} (${i.size})`).join(", ")}
-                  </p>
-                </Link>
+                <li key={ord.id}>
+                  <Link
+                    href={`/admin/orders/details?id=${encodeURIComponent(ord.id)}`}
+                    className="block min-w-0 rounded-sm border border-[#E8CFD2] bg-[#FFFBF5] p-4 no-underline transition-colors hover:border-[#B20947]/40"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className="lining-nums min-w-0 break-all text-[14px] font-semibold"
+                        style={{ color: CRIMSON }}
+                      >
+                        {ord.id}
+                      </span>
+                      <span className="inline-block shrink-0 rounded-full bg-[#F9E3E9] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F3057]">
+                        {ord.status}
+                      </span>
+                    </div>
+                    <p className="lining-nums m-0 mt-2 text-[13px] text-black/55">
+                      {ord.createdAt} · {ord.paymentMethod} ({ord.paymentStatus})
+                    </p>
+                    <p className="lining-nums m-0 mt-1.5 break-words text-[14px] font-semibold text-[#332B2B]">
+                      Total: {inr(ord.total)} · {ord.items.map((i) => `${i.name} (${i.size})`).join(", ")}
+                    </p>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </section>
+        </Panel>
       </div>
     </div>
   );
@@ -157,14 +203,21 @@ function CustomerDetailsInner() {
 
 export default function AdminCustomerDetailsPage() {
   return (
-    <AdminShell
-      title="Customer Details"
-      subtitle="Full customer profile, contact information, saved addresses, and order history"
-    >
+    <AdminShell title="Customer Details">
+      {/* Heading block */}
+      <h2
+        className={`${serif} mb-2 mt-0 break-words font-medium leading-tight`}
+        style={{ color: CRIMSON, fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
+      >
+        Customer Details
+      </h2>
+      <p className="mb-6 mt-0 text-[14px] text-black/60 sm:text-[15px] md:mb-10">
+        Full customer profile, contact information, saved addresses, and order history
+      </p>
+
       <Suspense fallback={<div className="p-6 text-sm text-[#6f6565]">Loading customer...</div>}>
         <CustomerDetailsInner />
       </Suspense>
     </AdminShell>
   );
 }
-
